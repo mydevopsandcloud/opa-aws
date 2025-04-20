@@ -1,0 +1,20 @@
+{
+  "aws_network_interfaces": [
+    {
+      "resource_id": "eni-003",
+      "public_ip_assigned": true,
+      "subnet": {
+        "subnet_id": "subnet-xyz",
+        "public": true
+      },
+      "security_groups": [
+        {
+          "group_id": "sg-999",
+          "ingress_rules": [
+            { "cidr": "0.0.0.0/0" }
+          ]
+        }
+      ]
+    }
+  ]
+}
