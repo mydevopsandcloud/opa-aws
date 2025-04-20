@@ -1,0 +1,36 @@
+{
+  "aws_network_interfaces": [
+    {
+      "resource_id": "eni-001",
+      "public_ip_assigned": false,
+      "subnet": {
+        "subnet_id": "subnet-aaa",
+        "public": false
+      },
+      "security_groups": [
+        {
+          "group_id": "sg-001",
+          "ingress_rules": [
+            { "cidr": "10.0.0.0/8" }
+          ]
+        }
+      ]
+    },
+    {
+      "resource_id": "eni-002",
+      "public_ip_assigned": true,
+      "subnet": {
+        "subnet_id": "subnet-bbb",
+        "public": false
+      },
+      "security_groups": [
+        {
+          "group_id": "sg-002",
+          "ingress_rules": [
+            { "cidr": "192.168.1.0/24" }
+          ]
+        }
+      ]
+    }
+  ]
+}
