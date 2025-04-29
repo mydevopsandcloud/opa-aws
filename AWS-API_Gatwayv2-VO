@@ -1,0 +1,102 @@
+package policy.aws.apigateway.authentication
+
+# Import the Wiz policy framework
+import data.wiz
+
+# Metadata for the policy
+metadata = {
+    "id": "AWS-APIGATEWAY-001",
+    "title": "AWS API Gateway must have authentication enabled",
+    "description": "This policy checks if AWS API Gateway resources have authentication mechanisms enabled",
+    "severity": "HIGH",
+    "cloud_provider": "AWS",
+    "resource_type": "AWS::ApiGateway::RestApi"
+}
+
+# Default to passing
+default allow = false
+
+# Check if the API Gateway has authentication enabled
+allow {
+    # Get all API Gateway resources
+    resource := input.resource
+    
+    # Check if the resource is an API Gateway
+    resource.type == "AWS::ApiGateway::RestApi"
+    
+    # Verify authentication is enabled
+    has_authentication(resource)
+}
+
+# Function to check if authentication is enabled
+has_authentication(resource) {
+    # Check for API key requirement
+    resource.configuration.apiKeyRequired == true
+}
+
+has_authentication(resource) {
+    # Check for authorization type (not NONE)
+    resource.configuration.authorizationType != "NONE"
+}
+
+has_authentication(resource) {
+    # Check for OAuth scopes
+    count(resource.configuration.authorizationScopes) > 0
+}
+
+has_authentication(resource) {
+    # Check for Lambda authorizer
+    resource.configuration.authorizerId != null
+}
+
+# Violation message
+violation[result] {
+    resource := input.resource
+    resource.type == "AWS::ApiGateway::RestApi"
+    not has_authentication(resource)
+    
+    result := {
+        "resource_id": resource.id,
+        "resource_type": resource.type,
+        "resource_region": resource.region,
+        "message": "API Gateway does not have authentication enabled",
+        "remediation": "Enable authentication for the API Gateway by configuring API keys, OAuth, or a custom authorizer"
+    }
+}
+
+
+
+//888888888888888888888888888888
+//PASS and FAIL
+
+
+{
+  "pass_test_data": {
+    "resource": {
+      "id": "abcd1234",
+      "type": "AWS::ApiGateway::RestApi",
+      "name": "SecureAPI",
+      "region": "us-east-1",
+      "configuration": {
+        "apiKeyRequired": true,
+        "authorizationType": "COGNITO_USER_POOLS",
+        "authorizationScopes": ["read", "write"],
+        "authorizerId": "auth-123456"
+      }
+    }
+  },
+  "fail_test_data": {
+    "resource": {
+      "id": "efgh5678",
+      "type": "AWS::ApiGateway::RestApi",
+      "name": "UnsecureAPI",
+      "region": "us-east-1",
+      "configuration": {
+        "apiKeyRequired": false,
+        "authorizationType": "NONE",
+        "authorizationScopes": [],
+        "authorizerId": null
+      }
+    }
+  }
+}
