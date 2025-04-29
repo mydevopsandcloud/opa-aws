@@ -1,0 +1,130 @@
+package wiz.policy
+
+default allow = true
+
+deny[reason] {
+  some i
+  resource := input.aws_apigatewayv2_apis[i]
+
+  # Only check HTTP APIs
+  resource.protocol_type == "HTTP"
+
+  # No authorizers defined
+  not resource.authorizers
+
+  # All routes are missing authorization_type or explicitly set to NONE
+  all_routes_unauthorized(resource)
+
+  reason := sprintf("API Gatewayv2 HTTP API '%s' does not have authentication enabled for any routes.", [resource.api_id])
+}
+
+deny[reason] {
+  some i
+  resource := input.aws_apigatewayv2_apis[i]
+
+  # Only check HTTP APIs
+  resource.protocol_type == "HTTP"
+
+  # Authorizers exist but routes are misconfigured (missing auth)
+  resource.authorizers
+  all_routes_unauthorized(resource)
+
+  reason := sprintf("API Gatewayv2 HTTP API '%s' has authorizers configured but none of the routes enforce authentication.", [resource.api_id])
+}
+
+# Helper function: return true if all routes lack authorization
+all_routes_unauthorized(resource) {
+  count({r | r := resource.routes[_]; not route_has_authorization(r)}) == count(resource.routes)
+}
+
+# Helper function: true if a route has authorization
+route_has_authorization(route) {
+  route.authorization_type != ""
+  route.authorization_type != null
+  route.authorization_type != "NONE"
+}
+
+
+
+//8888888888888888888888
+
+
+//pass
+
+{
+  "aws_apigatewayv2_apis": [
+    {
+      "api_id": "api-secure-001",
+      "protocol_type": "HTTP",
+      "authorizers": {
+        "jwt_auth": {
+          "identitySource": ["$request.header.Authorization"],
+          "jwtConfiguration": {
+            "issuer": "https://auth.example.com",
+            "audience": ["example-audience"]
+          }
+        }
+      },
+      "routes": [
+        {
+          "routeKey": "GET /secure",
+          "authorization_type": "JWT"
+        },
+        {
+          "routeKey": "POST /secure-data",
+          "authorization_type": "JWT"
+        }
+      ]
+    }
+  ]
+}
+
+
+
+//FAIL
+
+{
+  "aws_apigatewayv2_apis": [
+    {
+      "api_id": "api-public-002",
+      "protocol_type": "HTTP",
+      "routes": [
+        {
+          "routeKey": "GET /public",
+          "authorization_type": null
+        },
+        {
+          "routeKey": "POST /submit",
+          "authorization_type": "NONE"
+        }
+      ]
+    }
+  ]
+}
+
+
+//FAIL-2
+
+{
+  "aws_apigatewayv2_apis": [
+    {
+      "api_id": "api-misconfigured-003",
+      "protocol_type": "HTTP",
+      "authorizers": {
+        "jwt_auth": {
+          "identitySource": ["$request.header.Authorization"],
+          "jwtConfiguration": {
+            "issuer": "https://auth.example.com",
+            "audience": ["example-audience"]
+          }
+        }
+      },
+      "routes": [
+        {
+          "routeKey": "GET /open",
+          "authorization_type": "NONE"
+        }
+      ]
+    }
+  ]
+}
