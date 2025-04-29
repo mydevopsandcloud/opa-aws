@@ -1,0 +1,52 @@
+package wiz.policy
+
+default allow = true
+
+deny[reason] {
+  some i
+  resource := input.aws_api_gatewayv2_apis[i]
+
+  # Condition 1: Ensure the resource is of type API Gatewayv2
+  resource.type == "AWS::ApiGatewayV2::Api"
+
+  # Condition 2: Check if the API Gatewayv2 has an authentication configuration
+  not resource.auth_config or not resource.auth_config.enabled
+
+  reason := sprintf("API Gatewayv2 %s does not have authentication enabled", [resource.resource_id])
+}
+
+
+
+////9999999999999999999
+
+{
+  "aws_api_gatewayv2_apis": [
+    {
+      "resource_id": "api-11111",
+      "type": "AWS::ApiGatewayV2::Api",
+      "auth_config": {
+        "enabled": true
+      }
+    },
+    {
+      "resource_id": "api-22222",
+      "type": "AWS::ApiGatewayV2::Api",
+      "auth_config": {
+        "enabled": false
+      }
+    },
+    {
+      "resource_id": "api-33333",
+      "type": "AWS::ApiGatewayV2::Api"
+    },
+    {
+      "resource_id": "api-44444",
+      "type": "AWS::S3::Bucket",
+      "auth_config": {
+        "enabled": true
+      }
+    }
+  ]
+}
+
+
