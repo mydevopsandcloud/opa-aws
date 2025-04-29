@@ -1,0 +1,26 @@
+{
+  "resources": [
+    {
+      "path": "/users",
+      "resourceMethods": [
+        {
+          "httpMethod": "GET",
+          "authorizationType": "NONE"
+        },
+        {
+          "httpMethod": "POST",
+          "authorizationType": "AWS_IAM"
+        }
+      ]
+    },
+    {
+      "path": "/orders",
+      "resourceMethods": [
+        {
+          "httpMethod": "DELETE",
+          "authorizationType": "NONE"
+        }
+      ]
+    }
+  ]
+}
