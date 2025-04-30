@@ -1,0 +1,14 @@
+{
+  "input": {
+    "accounts": [
+      {
+        "accountId": "111111111111",
+        "securityChallengeQuestionsConfigured": true
+      },
+      {
+        "accountId": "222222222222",
+        "securityChallengeQuestionsConfigured": true
+      }
+    ]
+  }
+}
