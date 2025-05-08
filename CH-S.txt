@@ -1,0 +1,32 @@
+package wiz.security
+
+__rego_metadoc__ := {
+  "id": "aws_codebuild_user_controlled_buildspec",
+  "title": "Ensure CodeBuild project does not use user-controlled buildspec",
+  "description": "This policy checks that AWS CodeBuild projects do not reference custom .yaml/.yml buildspec files, which may bypass centrally managed pipeline controls.",
+  "severity": "High",
+  "category": "Build Security",
+  "platform": "AWS",
+  "resource": "aws_codebuild_project"
+}
+
+violation[res] {
+  resource := input.resource
+  resource.kind == "aws_codebuild_project"
+
+  buildspec := resource.config.environment.buildspec
+
+  # Detect if buildspec ends with .yaml or .yml (indicating a user-controlled file)
+  lower_endswith(buildspec, ".yaml") or lower_endswith(buildspec, ".yml")
+
+  res := {
+    "resource_id": resource.id,
+    "message": sprintf("CodeBuild project '%s' uses a user-controlled buildspec file: %s", [resource.config.name, buildspec]),
+    "severity": "High"
+  }
+}
+
+lower_endswith(value, suffix) = true {
+  lower_value := lower(value)
+  endswith(lower_value, suffix)
+}
