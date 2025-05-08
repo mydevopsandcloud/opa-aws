@@ -1,0 +1,20 @@
+{
+  "aws": {
+    "codebuild": {
+      "projects": [
+        {
+          "name": "unsafe-project-1",
+          "buildspec": "custom-buildspec.yaml"
+        },
+        {
+          "name": "unsafe-project-2",
+          "buildspec": "user-provided.yml"
+        },
+        {
+          "name": "mixed-project",
+          "buildspec": "mixed-buildspec.yml"
+        }
+      ]
+    }
+  }
+}
