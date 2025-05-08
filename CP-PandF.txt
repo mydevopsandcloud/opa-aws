@@ -1,0 +1,11 @@
+{
+    "name": "secure-codebuild-project",
+    "buildspec": ""
+}
+
+------------------
+
+{
+    "name": "unsecure-codebuild-project",
+    "buildspec": "custom_build.yaml"
+}
