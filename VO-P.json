@@ -1,0 +1,138 @@
+{
+  "test_cases": [
+    {
+      "name": "Pass - No buildspec",
+      "input": {
+        "resource_type": "aws_codebuild_project",
+        "resource_id": "project-without-buildspec",
+        "resource_configuration": {
+          "name": "project-without-buildspec",
+          "buildspec": null
+        }
+      },
+      "expected": {
+        "deny": false
+      }
+    },
+    {
+      "name": "Pass - Empty buildspec",
+      "input": {
+        "resource_type": "aws_codebuild_project",
+        "resource_id": "project-empty-buildspec",
+        "resource_configuration": {
+          "name": "project-empty-buildspec",
+          "buildspec": ""
+        }
+      },
+      "expected": {
+        "deny": false
+      }
+    },
+    {
+      "name": "Pass - Inline buildspec",
+      "input": {
+        "resource_type": "aws_codebuild_project",
+        "resource_id": "project-inline-buildspec",
+        "resource_configuration": {
+          "name": "project-inline-buildspec",
+          "buildspec": "version: 0.2\nphases:\n  build:\n    commands:\n      - echo Hello World"
+        }
+      },
+      "expected": {
+        "deny": false
+      }
+    },
+    {
+      "name": "Fail - YAML buildspec",
+      "input": {
+        "resource_type": "aws_codebuild_project",
+        "resource_id": "project-yaml-buildspec",
+        "resource_configuration": {
+          "name": "project-yaml-buildspec",
+          "buildspec": "buildspec.yaml"
+        }
+      },
+      "expected": {
+        "deny": true
+      }
+    },
+    {
+      "name": "Fail - YML buildspec",
+      "input": {
+        "resource_type": "aws_codebuild_project",
+        "resource_id": "project-yml-buildspec",
+        "resource_configuration": {
+          "name": "project-yml-buildspec",
+          "buildspec": "buildspec.yml"
+        }
+      },
+      "expected": {
+        "deny": true
+      }
+    },
+    {
+      "name": "Fail - Path with YAML buildspec",
+      "input": {
+        "resource_type": "aws_codebuild_project",
+        "resource_id": "project-path-yaml-buildspec",
+        "resource_configuration": {
+          "name": "project-path-yaml-buildspec",
+          "buildspec": "path/to/buildspec.yaml"
+        }
+      },
+      "expected": {
+        "deny": true
+      }
+    }
+  ],
+  "resources": [
+    {
+      "resource_type": "aws_codebuild_project",
+      "resource_id": "project-without-buildspec",
+      "resource_configuration": {
+        "name": "project-without-buildspec",
+        "buildspec": null
+      }
+    },
+    {
+      "resource_type": "aws_codebuild_project",
+      "resource_id": "project-empty-buildspec",
+      "resource_configuration": {
+        "name": "project-empty-buildspec",
+        "buildspec": ""
+      }
+    },
+    {
+      "resource_type": "aws_codebuild_project",
+      "resource_id": "project-inline-buildspec",
+      "resource_configuration": {
+        "name": "project-inline-buildspec",
+        "buildspec": "version: 0.2\nphases:\n  build:\n    commands:\n      - echo Hello World"
+      }
+    },
+    {
+      "resource_type": "aws_codebuild_project",
+      "resource_id": "project-yaml-buildspec",
+      "resource_configuration": {
+        "name": "project-yaml-buildspec",
+        "buildspec": "buildspec.yaml"
+      }
+    },
+    {
+      "resource_type": "aws_codebuild_project",
+      "resource_id": "project-yml-buildspec",
+      "resource_configuration": {
+        "name": "project-yml-buildspec",
+        "buildspec": "buildspec.yml"
+      }
+    },
+    {
+      "resource_type": "aws_codebuild_project",
+      "resource_id": "project-path-yaml-buildspec",
+      "resource_configuration": {
+        "name": "project-path-yaml-buildspec",
+        "buildspec": "path/to/buildspec.yaml"
+      }
+    }
+  ]
+}
