@@ -1,0 +1,20 @@
+{
+  "aws": {
+    "codebuild": {
+      "projects": [
+        {
+          "name": "safe-project-1",
+          "buildspec": "inline-buildspec-content"
+        },
+        {
+          "name": "safe-project-2",
+          "buildspec": null
+        },
+        {
+          "name": "safe-project-3",
+          "buildspec": "buildspec.json"
+        }
+      ]
+    }
+  }
+}
