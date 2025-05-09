@@ -1,0 +1,20 @@
+{
+  "codebuildProjects": [
+    {
+      "name": "project-a",
+      "source": {
+        "type": "GITHUB",
+        "location": "https://github.com/example/project-a",
+        "buildspec": null
+      }
+    },
+    {
+      "name": "project-b",
+      "source": {
+        "type": "S3",
+        "location": "s3://my-bucket/project-b",
+        "buildspec": null
+      }
+    }
+  ]
+}
