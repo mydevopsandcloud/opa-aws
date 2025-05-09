@@ -1,0 +1,37 @@
+package wiz
+
+# Default result
+default result = "fail"
+
+# Rule: Pass if all CodeBuild projects were used in the last 90 days
+result = "pass" {
+    some project
+    input.codebuild_projects
+    all_projects_recently_used
+}
+
+# Rule: Skip if no CodeBuild projects exist in the input
+result = "skip" {
+    not input.codebuild_projects
+}
+
+# Helper to check all projects have been used in the last 90 days
+all_projects_recently_used {
+    count([p | p := input.codebuild_projects[_]; not used_within_90_days(p)]) == 0
+}
+
+# A project is not used within 90 days if lastUsedTime is older than 90 days ago
+used_within_90_days(project) {
+    now := time.now_ns() / 1000000  # current time in ms
+    # 90 days in milliseconds: 90 * 24 * 60 * 60 * 1000
+    threshold := now - 7776000000
+    project.lastUsedTime > threshold
+}
+
+# Descriptive output
+currentConfiguration := sprintf("%d out of %d projects were used in the last 90 days", [
+    count([p | p := input.codebuild_projects[_]; used_within_90_days(p)]),
+    count(input.codebuild_projects)
+])
+
+expectedConfiguration := "All AWS CodeBuild projects should be used within the last 90 days"
