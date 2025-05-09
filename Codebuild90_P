@@ -1,0 +1,12 @@
+{
+  "codebuild_projects": [
+    {
+      "name": "project-a",
+      "lastUsedTime": 1715100000000  // e.g., May 2024 (recent)
+    },
+    {
+      "name": "project-b",
+      "lastUsedTime": 1717600000000  // e.g., early June 2024
+    }
+  ]
+}
