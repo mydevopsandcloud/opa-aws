@@ -1,0 +1,26 @@
+package wiz
+
+default result = "fail"
+
+# Rule passes if all CodeBuild projects use a user-controlled buildspec file
+result = "pass" {
+    count(input.codebuildProjects) > 0
+    all_projects_use_user_controlled_buildspec
+}
+
+# Rule fails if any project uses an inline buildspec (i.e., not user-controlled)
+all_projects_use_user_controlled_buildspec {
+    count([p | p := input.codebuildProjects[_]; p.source.buildspec != null]) == 0
+}
+
+# If there are no CodeBuild projects in input
+result = "skip" {
+    not input.codebuildProjects
+}
+
+currentConfiguration := sprintf("%d out of %d CodeBuild projects use inline buildspec (not user-controlled)", [
+    count([p | p := input.codebuildProjects[_]; p.source.buildspec != null]),
+    count(input.codebuildProjects)
+])
+
+expectedConfiguration := "All AWS CodeBuild projects should use user-controlled buildspec files in source repository"
