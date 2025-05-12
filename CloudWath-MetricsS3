@@ -1,0 +1,48 @@
+package wiz
+
+default result = "fail"
+
+# Pass if all relevant log groups have metric filters for S3 policy changes
+result = "pass" {
+    count(input.cloudwatch_log_groups) > 0
+    all_log_groups_have_s3_policy_change_metrics
+}
+
+all_log_groups_have_s3_policy_change_metrics {
+    count([
+        group |
+        group := input.cloudwatch_log_groups[_]
+        not has_s3_policy_change_metric(group)
+    ]) == 0
+}
+
+# Helper function to determine if a log group has required metric filter
+has_s3_policy_change_metric(group) {
+    some i
+    group.metric_filters[i].filter_pattern_matches_s3_policy_change
+}
+
+# Define match condition for filter pattern
+filter_pattern_matches_s3_policy_change(filter) = true {
+    lower(filter.filterPattern) == "*putbucketpolicy*"
+}
+
+filter_pattern_matches_s3_policy_change(filter) = true {
+    lower(filter.filterPattern) == "*deletebucketpolicy*"
+}
+
+# Skip if no log groups data
+result = "skip" {
+    not input.cloudwatch_log_groups
+}
+
+currentConfiguration := sprintf("%d out of %d log groups monitor S3 policy changes", [
+    count([
+        group |
+        group := input.cloudwatch_log_groups[_]
+        has_s3_policy_change_metric(group)
+    ]),
+    count(input.cloudwatch_log_groups)
+])
+
+expectedConfiguration := "All CloudWatch log groups should have metric filters for S3 bucket policy changes"
