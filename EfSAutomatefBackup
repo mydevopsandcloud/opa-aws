@@ -1,0 +1,35 @@
+package wiz
+
+default result = "fail"
+
+# Rule passes if all EFS file systems have automatic backups enabled
+result = "pass" {
+    count(input.resources) > 0
+    all_efs_have_automatic_backup_enabled
+}
+
+# Skip if no EFS resources are found
+result = "skip" {
+    not input.resources
+}
+
+# Helper rule to validate automatic backup on all EFS
+all_efs_have_automatic_backup_enabled {
+    count([efs | efs := input.resources[_];
+        efs.type == "aws_efs_file_system";
+        not efs.configuration.automaticBackups == true
+    ]) == 0
+}
+
+# Current configuration summary
+currentConfiguration := sprintf("%d out of %d EFS file systems have automatic backups enabled", [
+    count([efs | efs := input.resources[_];
+        efs.type == "aws_efs_file_system";
+        efs.configuration.automaticBackups == true
+    ]),
+    count([efs | efs := input.resources[_];
+        efs.type == "aws_efs_file_system"
+    ])
+])
+
+expectedConfiguration := "All AWS EFS file systems should have automatic backups enabled"
