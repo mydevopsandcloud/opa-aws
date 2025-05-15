@@ -1,0 +1,27 @@
+package wiz
+
+default result = "fail"
+
+# The rule passes if all repositories do not allow external public access
+result = "pass" {
+    count(input.codeArtifactRepositories) > 0
+    all_repos_no_public_access
+}
+
+# The rule skips if no CodeArtifact repositories are found
+result = "skip" {
+    not input.codeArtifactRepositories
+}
+
+# Helper rule: ensures all repositories have external access disabled
+all_repos_no_public_access {
+    count([repo | repo := input.codeArtifactRepositories[_]; repo.externalPublicAccess == true]) == 0
+}
+
+# Human-readable output
+currentConfiguration := sprintf("%d out of %d repositories allow external public access", [
+    count([repo | repo := input.codeArtifactRepositories[_]; repo.externalPublicAccess == true]),
+    count(input.codeArtifactRepositories)
+])
+
+expectedConfiguration := "All CodeArtifact repositories must have external public access disabled"
