@@ -1,0 +1,51 @@
+Here’s a Wiz Rego script to verify that **external public access** to **AWS CodeArtifact packages** is disabled:
+
+```rego
+package wiz
+
+default result = "fail"
+
+result = "pass" {
+    count(input.codeartifact_packages) > 0
+    all_packages_have_external_access_disabled
+}
+
+all_packages_have_external_access_disabled {
+    count([pkg | pkg := input.codeartifact_packages[_]; pkg.externalPublicAccessEnabled]) == 0
+}
+
+result = "skip" {
+    not input.codeartifact_packages
+}
+
+currentConfiguration := sprintf("%d out of %d CodeArtifact packages have external public access disabled", [
+    count([pkg | pkg := input.codeartifact_packages[_]; not pkg.externalPublicAccessEnabled]),
+    count(input.codeartifact_packages)
+])
+
+expectedConfiguration := "All AWS CodeArtifact packages should have external public access disabled"
+```
+
+### JSON Test Data
+
+**Pass Test Case:**
+```json
+{
+  "codeartifact_packages": [
+    {"name": "package1", "externalPublicAccessEnabled": false},
+    {"name": "package2", "externalPublicAccessEnabled": false}
+  ]
+}
+```
+
+**Fail Test Case:**
+```json
+{
+  "codeartifact_packages": [
+    {"name": "package1", "externalPublicAccessEnabled": true},
+    {"name": "package2", "externalPublicAccessEnabled": false}
+  ]
+}
+```
+
+This logic ensures that all CodeArtifact packages have external public access **disabled** before passing the security check. Let me know if you need refinements.
