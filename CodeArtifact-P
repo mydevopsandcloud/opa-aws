@@ -1,0 +1,12 @@
+{
+  "codeArtifactRepositories": [
+    {
+      "name": "internal-repo-1",
+      "externalPublicAccess": false
+    },
+    {
+      "name": "internal-repo-2",
+      "externalPublicAccess": false
+    }
+  ]
+}
