@@ -1,0 +1,36 @@
+package wiz
+
+default result = "fail"
+
+# Rule: EMR clusters should not be publicly accessible (i.e., Public IPs or Public Access disabled)
+result = "pass" {
+    count(input.resources) > 0
+    all_clusters_restricted
+}
+
+# Skip if no EMR clusters found
+result = "skip" {
+    not input.resources
+}
+
+all_clusters_restricted {
+    count([cluster |
+        cluster := input.resources[_];
+        cluster.kind == "aws_emr_cluster";
+        not cluster.configuration.public_ip_assigned;
+        not cluster.configuration.public_access_enabled
+    ]) == count([r | r := input.resources[_]; r.kind == "aws_emr_cluster"])
+}
+
+# Current configuration string for reporting
+currentConfiguration := sprintf("%d out of %d EMR clusters are private", [
+    count([cluster |
+        cluster := input.resources[_];
+        cluster.kind == "aws_emr_cluster";
+        not cluster.configuration.public_ip_assigned;
+        not cluster.configuration.public_access_enabled
+    ]),
+    count([r | r := input.resources[_]; r.kind == "aws_emr_cluster"])
+])
+
+expectedConfiguration := "All AWS EMR clusters should have public IP and public access disabled"
