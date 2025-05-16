@@ -1,0 +1,20 @@
+{
+  "resources": [
+    {
+      "kind": "aws_emr_cluster",
+      "id": "emr-001",
+      "configuration": {
+        "public_ip_assigned": false,
+        "public_access_enabled": false
+      }
+    },
+    {
+      "kind": "aws_emr_cluster",
+      "id": "emr-002",
+      "configuration": {
+        "public_ip_assigned": false,
+        "public_access_enabled": false
+      }
+    }
+  ]
+}
