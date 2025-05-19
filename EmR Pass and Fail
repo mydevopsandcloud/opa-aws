@@ -1,0 +1,28 @@
+fail
+
+{
+  "resources": [
+    {
+      "kind": "aws_emr_cluster",
+      "configuration": {
+        "name": "insecure-emr-cluster",
+        "master_public_dns": "ec2-52-0-0-1.compute-1.amazonaws.com",
+        "master_public_ip": "52.0.0.1"
+      }
+    }
+  ]
+}
+
+pass
+{
+  "resources": [
+    {
+      "kind": "aws_emr_cluster",
+      "configuration": {
+        "name": "secure-emr-cluster",
+        "master_public_dns": "",
+        "master_public_ip": ""
+      }
+    }
+  ]
+}
