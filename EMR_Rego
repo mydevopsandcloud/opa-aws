@@ -1,0 +1,21 @@
+package wiz
+
+default result = "fail"
+
+# Rule logic: Pass only if master node has no public IP or not exposed externally
+result = "pass" {
+    cluster := input.resources[_]
+    cluster.kind == "aws_emr_cluster"
+    not is_master_node_public(cluster)
+}
+
+# Rule skips evaluation if no EMR clusters are found
+result = "skip" {
+    not input.resources[_].kind == "aws_emr_cluster"
+}
+
+# Helper to determine if the master node has public access
+is_master_node_public(cluster) {
+    cluster.configuration.master_public_dns != ""
+    cluster.configuration.master_public_ip != ""
+}
