@@ -1,0 +1,44 @@
+package wiz
+
+# Default result is fail
+default result = "fail"
+
+# Rule passes if no master nodes in EMR clusters have public IPs
+result = "pass" {
+    count(input.resources) > 0
+    all_master_nodes_private
+}
+
+# Skip if no relevant EMR resources are found
+result = "skip" {
+    not input.resources
+}
+
+# Check that no master node in EMR clusters has a public IP assigned
+all_master_nodes_private {
+    count([r | r := input.resources[_];
+            r.resourceType == "AWS::EMR::Cluster";
+            r.configuration.masterPublicDnsName != null;
+            r.configuration.masterInstanceGroup != null;
+            some i;
+            r.configuration.masterInstanceGroup.instances[i].publicIpAddress != null
+        ]) == 0
+}
+
+# Optional: Human-readable configuration for visibility
+currentConfiguration := sprintf("%d of %d EMR clusters have public IPs on master nodes", [
+    count([r |
+        r := input.resources[_];
+        r.resourceType == "AWS::EMR::Cluster";
+        r.configuration.masterPublicDnsName != null;
+        r.configuration.masterInstanceGroup != null;
+        some i;
+        r.configuration.masterInstanceGroup.instances[i].publicIpAddress != null
+    ]),
+    count([r |
+        r := input.resources[_];
+        r.resourceType == "AWS::EMR::Cluster"
+    ])
+])
+
+expectedConfiguration := "All EMR clusters should have no public IP on master node"
