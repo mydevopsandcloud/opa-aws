@@ -1,0 +1,53 @@
+[
+  {
+    "test_name": "EMR cluster with no public IP on master",
+    "input": {
+      "resources": [
+        {
+          "resourceType": "AWS::EMR::Cluster",
+          "configuration": {
+            "masterPublicDnsName": "ip-172-31-0-10.ec2.internal",
+            "masterInstanceGroup": {
+              "instances": [
+                {
+                  "instanceId": "i-0abc123def456",
+                  "publicIpAddress": null
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "expected_result": "pass"
+  },
+  {
+    "test_name": "EMR cluster with public IP on master",
+    "input": {
+      "resources": [
+        {
+          "resourceType": "AWS::EMR::Cluster",
+          "configuration": {
+            "masterPublicDnsName": "ec2-3-22-45-78.compute-1.amazonaws.com",
+            "masterInstanceGroup": {
+              "instances": [
+                {
+                  "instanceId": "i-0def456abc789",
+                  "publicIpAddress": "3.22.45.78"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "expected_result": "fail"
+  },
+  {
+    "test_name": "No EMR clusters found",
+    "input": {
+      "resources": []
+    },
+    "expected_result": "skip"
+  }
+]
