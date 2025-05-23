@@ -1,0 +1,45 @@
+package wiz
+
+default result = "pass"
+
+# If the account is not part of an AWS Organization, skip the rule
+result = "skip" {
+    not input.organization_account
+}
+
+# Fail if the organization account does not have any delegated administrator configured
+result = "fail" {
+    input.organization_account
+    not input.delegated_admin_accounts
+    not array_exists(input.delegated_admin_accounts)
+}
+
+# Utility to check if array exists and has at least one entry
+array_exists(arr) = true {
+    count(arr) > 0
+}
+
+currentConfiguration := sprintf("DelegatedAdminAccounts: %v", [input.delegated_admin_accounts])
+expectedConfiguration := "At least one delegated administrator should be configured for the organization account"
+
+
+========
+
+{
+  "organization_account": true,
+  "delegated_admin_accounts": [
+    {
+      "account_id": "123456789012",
+      "service_principal": "guardduty.amazonaws.com"
+    }
+  ]
+}
+
+
+
+====
+
+{
+  "organization_account": true,
+  "delegated_admin_accounts": []
+}
