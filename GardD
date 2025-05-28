@@ -1,0 +1,28 @@
+package wiz
+
+default result = "skip"
+
+# Fail if MasterAccount is not configured properly
+result = "fail" {
+    not input.MasterAccount.Master.AccountId
+}
+
+result = "fail" {
+    input.MasterAccount.Master.RelationshipStatus != "Enabled"
+}
+
+result = "fail" {
+    count(input.Members) == 0
+}
+
+# Pass only if master is configured and has at least one member
+result = "pass" {
+    input.MasterAccount.Master.RelationshipStatus == "Enabled"
+    input.MasterAccount.Master.AccountId != ""
+    count(input.Members) > 0
+}
+
+currentConfiguration := sprintf("MasterAccount: %v, RelationshipStatus: %v, MemberCount: %d",
+    [input.MasterAccount.Master.AccountId, input.MasterAccount.Master.RelationshipStatus, count(input.Members)])
+
+expectedConfiguration := "GuardDuty must have a central MasterAccount with RelationshipStatus 'Enabled' and at least one Member account"
