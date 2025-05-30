@@ -1,0 +1,13 @@
+package wiz
+
+# This rule checks if IAM Role "SecurityAudit" exists in the account
+
+default result = "fail"
+
+result = "pass" {
+    some role
+    input.aws_iam_roles[role].RoleName == "SecurityAudit"
+}
+
+currentConfiguration := sprintf("Roles found: %s", [input.aws_iam_roles[_].RoleName])
+expectedConfiguration := "IAM Role 'SecurityAudit' should be created in the account"
