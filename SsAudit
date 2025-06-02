@@ -1,0 +1,13 @@
+package wiz
+
+# Default rule result
+default result = "fail"
+
+# Rule to check if 'externalId' contains the keyword 'SecurityAudit'
+result = "pass" {
+    contains(lower(input.externalId), "securityaudit")
+}
+
+currentConfiguration := sprintf("externalId is set to: %s", [input.externalId])
+
+expectedConfiguration := "externalId should contain the keyword 'SecurityAudit'"
