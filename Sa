@@ -1,0 +1,76 @@
+Here's a Wiz Rego script that checks whether an IAM role named SecurityAudit exists in the account by inspecting the resourceId. The script ensures this role is configured for auditing purposes. Along with that, I’ll provide pass/fail test data in JSON format to validate this rule.
+
+
+---
+
+✅ Wiz Rego Script: IAM Security Audit Role Check
+
+package wiz
+
+# Default result
+default result = "fail"
+
+# Check if the resource is the SecurityAudit IAM role
+result = "pass" {
+    lower(input.resourceId) == lower("arn:aws:iam::239897205054:role/SecurityAudit")
+}
+
+currentConfiguration := sprintf("resourceId is set to: %s", [input.resourceId])
+
+expectedConfiguration := "resourceId should be set to arn:aws:iam::239897205054:role/SecurityAudit"
+
+
+---
+
+✅ Test Case Data (JSON format)
+
+[
+  {
+    "testName": "Pass when SecurityAudit IAM role is correctly configured",
+    "input": {
+      "resourceId": "arn:aws:iam::239897205054:role/SecurityAudit"
+    },
+    "expectedResult": "pass"
+  },
+  {
+    "testName": "Fail when role name is incorrect",
+    "input": {
+      "resourceId": "arn:aws:iam::239897205054:role/SecurityAuditTemp"
+    },
+    "expectedResult": "fail"
+  },
+  {
+    "testName": "Fail when resourceId is for a policy instead of role",
+    "input": {
+      "resourceId": "arn:aws:iam::239897205054:policy/SecurityAudit"
+    },
+    "expectedResult": "fail"
+  },
+  {
+    "testName": "Fail when resourceId is null",
+    "input": {
+      "resourceId": null
+    },
+    "expectedResult": "fail"
+  },
+  {
+    "testName": "Fail when SecurityAudit role is in another account",
+    "input": {
+      "resourceId": "arn:aws:iam::123456789012:role/SecurityAudit"
+    },
+    "expectedResult": "fail"
+  }
+]
+
+
+---
+
+🔍 Notes:
+
+This rule matches a hardcoded SecurityAudit role ARN. If your environment uses different account IDs or dynamic detection, you can adapt this by generalizing or pattern-matching part of the ARN.
+
+You may adjust the resourceId check to accept multiple trusted account IDs using array matching if applicable.
+
+
+Would you like a version that accepts any AWS account ID as long as the role name is SecurityAudit?
+
