@@ -1,0 +1,30 @@
+package wiz
+
+import data.generic.common as common_lib
+import data.generic.terraform as terraLib
+
+# Allowed IAM roles (update with your specific ARNs)
+allowed_roles := {
+    "arn:aws:iam::123456789012:role/transfer-readonly",
+    "arn:aws:iam::123456789012:role/transfer-admin"
+}
+
+WizPolicy[result] {
+    document := input.document[i]
+    resource := document.resource.aws_transfer_user[name]
+
+    assigned_role := resource.role
+
+    # Fail if the assigned role is not in allowed_roles
+    not allowed_roles[assigned_role]
+
+    result := {
+        "documentId": document.id,
+        "resourceType": "aws_transfer_user",
+        "resourceName": terraLib.get_resource_name(resource, name),
+        "searchKey": sprintf("aws_transfer_user[%v].role", [name]),
+        "keyExpectedValue": "role must be in the allowed_roles list",
+        "keyActualValue": sprintf("role is %v, which is not in allowed roles", [assigned_role]),
+        "resourceTags": object.get(resource, "tags", {})
+    }
+}
