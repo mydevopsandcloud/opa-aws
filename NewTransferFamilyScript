@@ -1,0 +1,43 @@
+package wiz
+
+import data.generic.common as common_lib
+import data.generic.terraform as terraLib
+
+# Function to check if role is allowed (must follow 'transfer-' naming convention)
+is_allowed_transfer_role(role) {
+    startswith(role, "arn:aws:iam::") 
+    contains(role, ":role/transfer-")
+}
+
+WizPolicy[result] {
+    document := input.document[i]
+    resource := document.resource.aws_transfer_server[name]
+
+    violation := false
+
+    # Check invocation_role
+    invocation_role := object.get(resource, "invocation_role", "")
+    invocation_role != "" {
+        not is_allowed_transfer_role(invocation_role)
+        violation := true
+    }
+
+    # Check logging_role
+    logging_role := object.get(resource, "logging_role", "")
+    logging_role != "" {
+        not is_allowed_transfer_role(logging_role)
+        violation := true
+    }
+
+    violation
+
+    result := {
+        "documentId": document.id,
+        "resourceType": "aws_transfer_server",
+        "resourceName": terraLib.get_resource_name(resource, name),
+        "searchKey": sprintf("aws_transfer_server[%v].invocation_role / logging_role", [name]),
+        "keyExpectedValue": "Roles must start with 'arn:aws:iam::<account>:role/transfer-'",
+        "keyActualValue": sprintf("invocation_role: %v, logging_role: %v", [invocation_role, logging_role]),
+        "resourceTags": object.get(resource, "tags", {})
+    }
+}
