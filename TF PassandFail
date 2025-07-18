@@ -1,0 +1,45 @@
+{
+  "document": [
+    {
+      "id": "doc-pass-001",
+      "resource": {
+        "aws_transfer_server": {
+          "transfer_server_example": {
+            "invocation_role": "arn:aws:iam::999999999999:role/transfer-invocation-role",
+            "logging_role": "arn:aws:iam::999999999999:role/transfer-logging-role",
+            "tags": {
+              "env": "prod"
+            }
+          }
+        }
+      }
+    }
+  ]
+}
+
+
+
+
+
+
+
+egg
+{
+  "document": [
+    {
+      "id": "doc-fail-001",
+      "resource": {
+        "aws_transfer_server": {
+          "transfer_server_example": {
+            "invocation_role": "arn:aws:iam::999999999999:role/GenericAdminRole",
+            "logging_role": "arn:aws:iam::999999999999:role/CloudWatchLogsRole",
+            "tags": {
+              "env": "dev"
+            }
+          }
+        }
+      }
+    }
+  ]
+}
+
