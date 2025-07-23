@@ -1,0 +1,3 @@
+{
+  "SecurityConfigurationDetails": "{\"EncryptionConfiguration\": {\"EnableInTransitEncryption\": true, \"EnableAtRestEncryption\": true}}"
+}
