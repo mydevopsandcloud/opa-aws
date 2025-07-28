@@ -1,0 +1,17 @@
+{
+  "document": [
+    {
+      "id": "doc-4",
+      "resource": {
+        "aws_cloudwatch_log_group": {
+          "test-log-group": {
+            "retention_in_days": 180,
+            "tags": {
+              "owner": "cloud-team"
+            }
+          }
+        }
+      }
+    }
+  ]
+}
