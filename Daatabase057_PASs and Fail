@@ -1,0 +1,36 @@
+[7/28, 18:25] VJ@INDIA: resource "aws_cloudsearch_domain" "pass_example" {
+  domain_name = "secure-domain"
+
+  endpoint_options {
+    enforce_https       = true
+    tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
+  }
+
+  tags = {
+    Environment = "production"
+  }
+}
+[7/28, 18:25] VJ@INDIA: resource "aws_cloudsearch_domain" "fail_old_policy" {
+  domain_name = "insecure-domain-old-policy"
+
+  endpoint_options {
+    enforce_https       = true
+    tls_security_policy = "Policy-Min-TLS-1-0-2015-04"
+  }
+
+  tags = {
+    Environment = "dev"
+  }
+}
+[7/28, 18:26] VJ@INDIA: resource "aws_cloudsearch_domain" "fail_no_tls" {
+  domain_name = "insecure-domain-no-tls"
+
+  endpoint_options {
+    enforce_https = true
+    # tls_security_policy is missing
+  }
+
+  tags = {
+    Department = "test"
+  }
+}
