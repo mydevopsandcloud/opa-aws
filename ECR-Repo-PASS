@@ -1,0 +1,22 @@
+{
+  "document": [
+    {
+      "id": "doc-pass-1",
+      "resource": {
+        "aws_ecr_repository": {
+          "my_repo": {
+            "name": "my-repo",
+            "tags": {
+              "env": "prod"
+            }
+          }
+        },
+        "aws_ecr_repository_policy": {
+          "repo_policy": {
+            "repository": "my-repo"
+          }
+        }
+      }
+    }
+  ]
+}
