@@ -1,0 +1,22 @@
+{
+  "document": [
+    {
+      "id": "doc-fail-2",
+      "resource": {
+        "aws_ecr_repository": {
+          "main_repo": {
+            "name": "main-repo",
+            "tags": {
+              "team": "platform"
+            }
+          }
+        },
+        "aws_ecr_repository_policy": {
+          "other_repo_policy": {
+            "repository": "unrelated-repo"
+          }
+        }
+      }
+    }
+  ]
+}
