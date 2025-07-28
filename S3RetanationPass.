@@ -1,0 +1,17 @@
+{
+  "document": [
+    {
+      "id": "doc-2",
+      "resource": {
+        "aws_cloudwatch_log_group": {
+          "audit-log-group": {
+            "retention_in_days": 0,
+            "tags": {
+              "team": "security"
+            }
+          }
+        }
+      }
+    }
+  ]
+}
