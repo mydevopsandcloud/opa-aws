@@ -1,0 +1,23 @@
+generic:
+  ansible:
+    tasks:
+      playbook-insecure:
+        - name: insecure-wide-port-ipv4
+          ec2_group:
+            state: present
+            rules:
+              - from_port: 1000
+                to_port: 2000
+                cidr_ip: 0.0.0.0/0
+            tags:
+              Owner: SecurityTeam
+
+        - name: insecure-wide-port-ipv6
+          amazon.aws.ec2_group:
+            state: present
+            rules:
+              - from_port: 500
+                to_port: 1500
+                cidr_ipv6: "::/0"
+            tags:
+              Project: UnsecureNet
