@@ -1,0 +1,24 @@
+package wiz
+
+import data.generic.terraform as terraLib
+
+hasMultipleENIs(resource) {
+  count(terraLib.getValueArrayOrObject(resource.network_interface)) > 1
+}
+
+WizPolicy[result] {
+  document := input.document[i]
+  resource := document.resource.aws_instance[name]
+
+  hasMultipleENIs(resource)
+
+  result := {
+    "documentId": document.id,
+    "resourceType": "aws_instance",
+    "resourceName": terraLib.get_resource_name(resource, name),
+    "searchKey": sprintf("aws_instance[%s].network_interface", [name]),
+    "keyExpectedValue": "EC2 instance should not have more than one ENI",
+    "keyActualValue": sprintf("Has %v network interfaces", [count(resource.network_interface)]),
+    "resourceTags": object.get(resource, "tags", {})
+  }
+}
