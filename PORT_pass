@@ -1,0 +1,23 @@
+generic:
+  ansible:
+    tasks:
+      playbook-secure:
+        - name: secure-ipv4
+          ec2_group:
+            state: present
+            rules:
+              - from_port: 22
+                to_port: 22
+                cidr_ip: 10.0.0.0/16
+            tags:
+              Environment: Dev
+              
+        - name: secure-ipv6
+          amazon.aws.ec2_group:
+            state: present
+            rules:
+              - from_port: 443
+                to_port: 443
+                cidr_ipv6: "fd00::/8"
+            tags:
+              Department: IT
