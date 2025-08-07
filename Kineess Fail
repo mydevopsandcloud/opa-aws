@@ -1,0 +1,19 @@
+resource "aws_kinesis_firehose_delivery_stream" "fail_wrong_key_type" {
+  name        = "fail_wrong_key_type"
+  destination = "s3"
+
+  server_side_encryption {
+    enabled  = true
+    key_type = "AWS_OWNED_CMK"
+  }
+
+  kinesis_source_configuration {
+    kinesis_stream_arn = "arn:aws:kinesis:us-east-1:123456789012:stream/wrongkey"
+    role_arn           = "arn:aws:iam::123456789012:role/firehose_role"
+  }
+
+  tags = {
+    Environment = "qa"
+    Owner       = "cloudsec"
+  }
+}
