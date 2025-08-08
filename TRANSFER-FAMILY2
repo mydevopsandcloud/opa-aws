@@ -1,0 +1,89 @@
+package wiz
+
+import data.generic.common as common_lib
+import data.generic.terraform as tf_lib
+
+# Rule 1: Detect overly broad actions in IAM policies for AWS Transfer Server
+WizPolicy[result] {
+    resourceType := {"aws_iam_role_policy", "aws_iam_user_policy", "aws_iam_group_policy", "aws_iam_policy"}
+    resource := input.document[i].resource[resourceType[idx]][name]
+
+    # Only check policies attached to Transfer Server IAM roles
+    tf_lib.validKey(resource, "policy")
+    policy := common_lib.json_unmarshal(resource.policy)
+    st := common_lib.get_statement(policy)
+    statement := st[_]
+
+    # Check if this policy is related to transfer server
+    lower_name := lower(tf_lib.get_resource_name(resource, name))
+    contains(lower_name, "transfer")
+
+    common_lib.is_allow_effect(statement)
+    action := statement.Action[_]
+    common_lib.string_matches_pattern(action, "s3:*")  # Detect broad S3 actions
+    result := {
+        "documentId": input.document[i].id,
+        "resourceType": resourceType[idx],
+        "resourceName": tf_lib.get_resource_name(resource, name),
+        "searchKey": sprintf("%s[%s].policy", [resourceType[idx], name]),
+        "issueType": "IncorrectValue",
+        "keyExpectedValue": "Avoid overly broad S3 actions (use specific actions like s3:GetObject)",
+        "keyActualValue": sprintf("Contains overly broad action: %s", [action]),
+        "searchLine": common_lib.build_search_line(["resource", resourceType[idx], name, "policy"], [])
+    }
+}
+
+# Rule 2: Detect overly broad Logs actions in IAM policies for AWS Transfer Server
+WizPolicy[result] {
+    resourceType := {"aws_iam_role_policy", "aws_iam_user_policy", "aws_iam_group_policy", "aws_iam_policy"}
+    resource := input.document[i].resource[resourceType[idx]][name]
+
+    tf_lib.validKey(resource, "policy")
+    policy := common_lib.json_unmarshal(resource.policy)
+    st := common_lib.get_statement(policy)
+    statement := st[_]
+
+    lower_name := lower(tf_lib.get_resource_name(resource, name))
+    contains(lower_name, "transfer")
+
+    common_lib.is_allow_effect(statement)
+    action := statement.Action[_]
+    common_lib.string_matches_pattern(action, "logs:*")  # Detect broad CloudWatch Logs actions
+    result := {
+        "documentId": input.document[i].id,
+        "resourceType": resourceType[idx],
+        "resourceName": tf_lib.get_resource_name(resource, name),
+        "searchKey": sprintf("%s[%s].policy", [resourceType[idx], name]),
+        "issueType": "IncorrectValue",
+        "keyExpectedValue": "Avoid overly broad Logs actions (use specific actions like logs:PutLogEvents)",
+        "keyActualValue": sprintf("Contains overly broad action: %s", [action]),
+        "searchLine": common_lib.build_search_line(["resource", resourceType[idx], name, "policy"], [])
+    }
+}
+
+# Rule 3: Detect overly broad Resource definitions in IAM policies for AWS Transfer Server
+WizPolicy[result] {
+    resourceType := {"aws_iam_role_policy", "aws_iam_user_policy", "aws_iam_group_policy", "aws_iam_policy"}
+    resource := input.document[i].resource[resourceType[idx]][name]
+
+    tf_lib.validKey(resource, "policy")
+    policy := common_lib.json_unmarshal(resource.policy)
+    st := common_lib.get_statement(policy)
+    statement := st[_]
+
+    lower_name := lower(tf_lib.get_resource_name(resource, name))
+    contains(lower_name, "transfer")
+
+    common_lib.is_allow_effect(statement)
+    common_lib.equalsOrInArray(statement.Resource, "*")
+    result := {
+        "documentId": input.document[i].id,
+        "resourceType": resourceType[idx],
+        "resourceName": tf_lib.get_resource_name(resource, name),
+        "searchKey": sprintf("%s[%s].policy", [resourceType[idx], name]),
+        "issueType": "IncorrectValue",
+        "keyExpectedValue": "Resource should be specific to required buckets/log groups, not '*'",
+        "keyActualValue": "'policy.Statement.Resource' contains '*'",
+        "searchLine": common_lib.build_search_line(["resource", resourceType[idx], name, "policy"], [])
+    }
+}
