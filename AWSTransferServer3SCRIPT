@@ -1,0 +1,76 @@
+package wiz
+
+import data.generic.common as common_lib
+import data.generic.terraform as tf_lib
+
+# Allowed specific actions for Transfer Server
+allowed_s3_actions := {
+    "s3:ListBucket",
+    "s3:GetObject",
+    "s3:PutObject",
+    "s3:DeleteObject",
+    "s3:GetBucketLocation"
+}
+
+allowed_logs_actions := {
+    "logs:CreateLogGroup",
+    "logs:CreateLogStream",
+    "logs:PutLogEvents"
+}
+
+# Detect overly broad or non-least-privilege actions in IAM policies for Transfer Server
+WizPolicy[result] {
+    resourceType := {"aws_iam_policy"}
+    resource := input.document[i].resource[resourceType[idx]][name]
+
+    # Check only policies for Transfer Server
+    contains(lower(tf_lib.get_resource_name(resource, name)), "transfer")
+
+    policy := common_lib.json_unmarshal(resource.policy)
+    st := common_lib.get_statement(policy)
+    statement := st[_]
+    common_lib.is_allow_effect(statement)
+
+    action := statement.Action[_]
+
+    not allowed_s3_actions[action]
+    not allowed_logs_actions[action]
+
+    # Fail if action uses wildcard or is not in allowed list
+    result := {
+        "documentId": input.document[i].id,
+        "resourceType": resourceType[idx],
+        "resourceName": tf_lib.get_resource_name(resource, name),
+        "searchKey": sprintf("%s[%s].policy", [resourceType[idx], name]),
+        "issueType": "IncorrectValue",
+        "keyExpectedValue": "Only least-privilege actions allowed for AWS Transfer Server",
+        "keyActualValue": sprintf("Contains disallowed or overly broad action: %s", [action]),
+        "searchLine": common_lib.build_search_line(["resource", resourceType[idx], name, "policy"], [])
+    }
+}
+
+# Detect overly broad Resource definitions in IAM policies for Transfer Server
+WizPolicy[result] {
+    resourceType := {"aws_iam_policy"}
+    resource := input.document[i].resource[resourceType[idx]][name]
+
+    contains(lower(tf_lib.get_resource_name(resource, name)), "transfer")
+
+    policy := common_lib.json_unmarshal(resource.policy)
+    st := common_lib.get_statement(policy)
+    statement := st[_]
+    common_lib.is_allow_effect(statement)
+
+    common_lib.equalsOrInArray(statement.Resource, "*")
+
+    result := {
+        "documentId": input.document[i].id,
+        "resourceType": resourceType[idx],
+        "resourceName": tf_lib.get_resource_name(resource, name),
+        "searchKey": sprintf("%s[%s].policy", [resourceType[idx], name]),
+        "issueType": "IncorrectValue",
+        "keyExpectedValue": "Resource ARNs must be specific, not '*'",
+        "keyActualValue": "'policy.Statement.Resource' contains '*'",
+        "searchLine": common_lib.build_search_line(["resource", resourceType[idx], name, "policy"], [])
+    }
+}
