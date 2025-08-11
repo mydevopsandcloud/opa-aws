@@ -1,0 +1,42 @@
+package wiz
+
+import data.generic.common as common_lib
+import data.generic.terraform as tf_lib
+
+# Restricted actions we want to detect
+restricted_actions := {
+    "ecr-public:PutImage",
+    "ecr-public:BatchPutImage"
+}
+
+WizPolicy[result] {
+    resourceType := "aws_ecrpublic_repository_policy"
+    resource := input.document[i].resource[resourceType][name]
+
+    # Parse the JSON policy from Terraform
+    policy := common_lib.json_unmarshal(resource.policy)
+    statements := common_lib.get_statement(policy)
+    statement := statements[_]
+
+    # Normalize actions to an array
+    actions := common_lib.get_normalized_actions(statement)
+
+    # Check if restricted actions are present
+    some action
+    restricted_actions[action]
+    action == actions[_]
+
+    # FAIL if Effect is Allow
+    common_lib.is_allow_effect(statement)
+
+    result := {
+        "documentId": input.document[i].id,
+        "resourceType": resourceType,
+        "resourceName": tf_lib.get_resource_name(resource, name),
+        "searchKey": sprintf("%s[%s].policy.Statement", [resourceType, name]),
+        "issueType": "IncorrectValue",
+        "keyExpectedValue": "Restricted actions must not be allowed",
+        "keyActualValue": sprintf("Effect=Allow for restricted action: %s", [action]),
+        "searchLine": common_lib.build_search_line(["resource", resourceType, name, "policy"], [])
+    }
+}
