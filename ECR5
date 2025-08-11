@@ -1,0 +1,59 @@
+package wiz.terraform.ecrpublic_deny_putimage
+
+import data.generic.terraform as terraLib
+import data.generic.common as commonLib
+
+ECR_PUT_ACTIONS := {
+    "ecr-public:PutImage",
+    "ecr-public:BatchPutImage"
+}
+
+WizPolicy[result] {
+    resource := input.document[_].resource.aws_ecrpublic_repository[_]
+    policy := get_policy_document(resource)
+    statement := policy.statement[_]
+
+    has_ecr_put_action(statement)
+    statement.effect == "Deny"
+
+    result := {
+        "resource_id": resource._id,
+        "status": "PASS",
+        "message": sprintf("ECR public repository policy correctly denies %v", [ECR_PUT_ACTIONS])
+    }
+}
+
+WizPolicy[result] {
+    resource := input.document[_].resource.aws_ecrpublic_repository[_]
+    policy := get_policy_document(resource)
+    statement := policy.statement[_]
+
+    has_ecr_put_action(statement)
+    statement.effect == "Allow"
+
+    result := {
+        "resource_id": resource._id,
+        "status": "FAIL",
+        "message": sprintf("ECR public repository policy allows %v", [ECR_PUT_ACTIONS])
+    }
+}
+
+# Helper: Find associated policy document
+get_policy_document(resource) = policy_doc {
+    pol_resource := input.document[_].resource.aws_ecrpublic_repository_policy[_]
+    pol_resource.repository_name == resource.repository_name
+    pol_data := input.document[_].data.aws_iam_policy_document[_]
+    policy_doc := pol_data
+}
+
+# Helper: Check if statement has the target actions
+has_ecr_put_action(statement) {
+    some action
+    action := statement.actions[_]
+    action_in_set(action, ECR_PUT_ACTIONS)
+}
+
+# Helper: Membership check
+action_in_set(action, set) {
+    set[action]
+}
