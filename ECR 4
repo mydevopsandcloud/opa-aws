@@ -1,0 +1,71 @@
+package wiz
+
+import data.generic.common as common_lib
+import data.generic.terraform as tf_lib
+
+# Actions that should be denied
+restricted_actions := {
+    "ecr-public:PutImage",
+    "ecr-public:BatchPutImage"
+}
+
+# Check ECR Public Repository policies for restricted actions
+WizPolicy[result] {
+    resourceType := {"aws_ecrpublic_repository_policy"}
+    resource := input.document[i].resource[resourceType[idx]][name]
+
+    # Unmarshal policy JSON
+    policy := common_lib.json_unmarshal(resource.policy)
+    st := common_lib.get_statement(policy)
+    statement := st[_]
+
+    some action
+    action := statement.Action[_]
+    restricted_actions[action]
+
+    # If action is in restricted list and Effect is Allow => FAIL
+    common_lib.is_allow_effect(statement)
+
+    result := {
+        "documentId": input.document[i].id,
+        "resourceType": resourceType[idx],
+        "resourceName": tf_lib.get_resource_name(resource, name),
+        "searchKey": sprintf("%s[%s].policy", [resourceType[idx], name]),
+        "issueType": "IncorrectValue",
+        "keyExpectedValue": "Restricted actions must have Effect = Deny in ECR public policies",
+        "keyActualValue": sprintf("Action %s is allowed in Effect=Allow statement", [action]),
+        "searchLine": common_lib.build_search_line(
+            ["resource", resourceType[idx], name, "policy"], []
+        )
+    }
+}
+
+# Pass case detection (optional, for clarity in Wiz testing) — not strictly required in Wiz but helps in debugging
+WizPolicy[result] {
+    resourceType := {"aws_ecrpublic_repository_policy"}
+    resource := input.document[i].resource[resourceType[idx]][name]
+
+    policy := common_lib.json_unmarshal(resource.policy)
+    st := common_lib.get_statement(policy)
+    statement := st[_]
+
+    some action
+    action := statement.Action[_]
+    restricted_actions[action]
+
+    # Pass if Effect = Deny
+    statement.Effect == "Deny"
+
+    result := {
+        "documentId": input.document[i].id,
+        "resourceType": resourceType[idx],
+        "resourceName": tf_lib.get_resource_name(resource, name),
+        "searchKey": sprintf("%s[%s].policy", [resourceType[idx], name]),
+        "issueType": "Pass",
+        "keyExpectedValue": "Restricted actions are correctly set to Effect=Deny",
+        "keyActualValue": sprintf("Action %s is denied", [action]),
+        "searchLine": common_lib.build_search_line(
+            ["resource", resourceType[idx], name, "policy"], []
+        )
+    }
+}
