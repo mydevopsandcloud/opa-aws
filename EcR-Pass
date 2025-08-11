@@ -1,0 +1,45 @@
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
+
+provider "aws" {
+  region                      = "us-west-2"
+  skip_credentials_validation = true
+  skip_requesting_account_id  = true
+  skip_metadata_api_check     = true
+  access_key                  = "mock_access_key"
+  secret_key                  = "mock_secret_key"
+}
+
+# Resource under test
+resource "aws_ecrpublic_repository" "pass_example" {
+  repository_name = "pass-example"
+}
+
+# Attach a repository policy with restricted actions under Deny
+resource "aws_ecrpublic_repository_policy" "pass_example" {
+  repository_name = aws_ecrpublic_repository.pass_example.repository_name
+  policy          = data.aws_iam_policy_document.pass_policy.json
+}
+
+data "aws_iam_policy_document" "pass_policy" {
+  statement {
+    sid    = "DenyPutImage"
+    effect = "Deny"
+
+    principals {
+      type        = "AWS"
+      identifiers = ["*"]
+    }
+
+    actions = [
+      "ecr-public:PutImage",
+      "ecr-public:BatchPutImage"
+    ]
+  }
+}
