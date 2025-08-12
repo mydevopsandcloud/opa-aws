@@ -1,0 +1,47 @@
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
+
+provider "aws" {
+  region                      = "us-west-2"
+  skip_credentials_validation = true
+  skip_requesting_account_id  = true
+  skip_metadata_api_check     = true
+  access_key                  = "mock_access_key"
+  secret_key                  = "mock_secret_key"
+}
+
+# PASS CASE: Stateless rule group has at least one stateless_rule
+resource "aws_networkfirewall_rule_group" "pass_case" {
+  name        = "stateless-pass-example"
+  description = "Stateless rule group with rules"
+  capacity    = 100
+  type        = "STATELESS"
+
+  rule_group {
+    rules_source {
+      stateless_rules_and_custom_actions {
+        stateless_rule {
+          priority = 1
+          rule_definition {
+            actions = ["aws:pass"]
+            match_attributes {
+              source {
+                address_definition = "1.1.1.1/32"
+              }
+              destination {
+                address_definition = "2.2.2.2/32"
+              }
+              protocols = [6]
+            }
+          }
+        }
+      }
+    }
+  }
+}
