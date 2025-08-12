@@ -1,0 +1,32 @@
+package wiz
+
+import data.generic.terraform as terralib
+
+# Only return a result if a stateless rule has empty match_attributes
+WizPolicy[result] {
+    resourceType := {"aws_networkfirewall_rule_group"}[_]
+    resource := input.document[i].resource[resourceType][name]
+
+    # Extract stateless rules array safely
+    stateless := terralib.getValueFromArrayOfObject(resource.rule_group.rules_source.stateless_rules_and_custom_actions.stateless_rule)
+
+    some idx
+    rule := stateless[idx]
+
+    match_attrs := rule.rule_definition.match_attributes
+
+    # Fail condition: match_attributes is null OR empty object
+    not terralib.validKey(rule.rule_definition, "match_attributes")
+    or count(object.keys(match_attrs)) == 0
+
+    result := {
+        "documentId": input.document[i].id,
+        "resourceName": terralib.get_resource_name(resource, name),
+        "resourceType": resourceType,
+        "searchKey": sprintf("%s[%s].rule_group.rules_source.stateless_rules_and_custom_actions.stateless_rule[%d].rule_definition.match_attributes", [resourceType, name, idx]),
+        "issueType": "EmptyMatchAttributes",
+        "keyExpectedValue": "match_attributes should not be empty",
+        "keyActualValue": "match_attributes is empty or undefined",
+        "resourceTags": object.get(resource, "tags", {}),
+    }
+}
