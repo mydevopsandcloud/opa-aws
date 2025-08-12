@@ -1,0 +1,79 @@
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
+
+provider "aws" {
+  region                      = "us-west-2"
+  skip_credentials_validation = true
+  skip_requesting_account_id  = true
+  skip_metadata_api_check     = true
+  access_key                  = "mock_access_key"
+  secret_key                  = "mock_secret_key"
+}
+
+resource "aws_networkfirewall_rule_group" "fail_example" {
+  description = "Stateless FAIL Rule Group"
+  capacity    = 100
+  name        = "fail-example"
+  type        = "STATELESS"
+
+  rule_group {
+    rules_source {
+      stateless_rules_and_custom_actions {
+        custom_action {
+          action_definition {
+            publish_metric_action {
+              dimension {
+                value = "2"
+              }
+            }
+          }
+          action_name = "ExampleMetricsAction"
+        }
+
+        # This will trigger the rule (empty match_attributes)
+        stateless_rule {
+          priority = 1
+          rule_definition {
+            actions = ["aws:pass", "ExampleMetricsAction"]
+            match_attributes {}
+          }
+        }
+
+        # A valid non-empty rule (does not prevent the FAIL because one invalid exists)
+        stateless_rule {
+          priority = 2
+          rule_definition {
+            actions = ["aws:pass", "ExampleMetricsAction"]
+            match_attributes {
+              source {
+                address_definition = "1.2.3.4/32"
+              }
+              source_port {
+                from_port = 443
+                to_port   = 443
+              }
+              destination {
+                address_definition = "124.1.1.5/32"
+              }
+              destination_port {
+                from_port = 443
+                to_port   = 443
+              }
+              protocols = [6]
+              tcp_flag {
+                flags = ["SYN"]
+                masks = ["SYN", "ACK"]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
