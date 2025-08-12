@@ -1,0 +1,48 @@
+package wiz
+
+import data.generic.common as common_lib
+import data.generic.terraform as terralib
+
+# Policy to check if stateless rules have empty match_attributes
+WizPolicy[result] {
+    resource := input.document[i].resource.aws_networkfirewall_rule_group[name]
+    
+    # Navigate to stateless rules
+    rule_group := resource.rule_group[_]
+    rules_source := rule_group.rules_source[_]
+    stateless_rules_and_custom_actions := rules_source.stateless_rules_and_custom_actions[_]
+    stateless_rule := stateless_rules_and_custom_actions.stateless_rule[_]
+    rule_definition := stateless_rule.rule_definition[_]
+    
+    # Check if match_attributes exists but is empty (no child attributes)
+    match_attributes := rule_definition.match_attributes[_]
+    is_empty_match_attributes(match_attributes)
+    
+    result := {
+        "documentId": input.document[i].id,
+        "resourceName": terralib.get_resource_name(resource, name),
+        "resourceType": "aws_networkfirewall_rule_group",
+        "searchKey": sprintf("aws_networkfirewall_rule_group[%s].rule_group.rules_source.stateless_rules_and_custom_actions.stateless_rule.rule_definition.match_attributes", [name]),
+        "issueType": "IncorrectValue",
+        "keyExpectedValue": sprintf("'aws_networkfirewall_rule_group[%s]' stateless rules should have non-empty match_attributes", [name]),
+        "keyActualValue": sprintf("'aws_networkfirewall_rule_group[%s]' stateless rule has empty match_attributes", [name]),
+        "resourceTags": object.get(resource, "tags", {}),
+    }
+}
+
+# Helper function to check if match_attributes is empty
+is_empty_match_attributes(match_attributes) {
+    # Check if match_attributes is completely empty (no keys at all)
+    count(match_attributes) == 0
+}
+
+# Alternative check - match_attributes exists but all possible child attributes are missing or empty
+is_empty_match_attributes(match_attributes) {
+    # match_attributes exists but has no meaningful content
+    not terralib.validKey(match_attributes, "source")
+    not terralib.validKey(match_attributes, "destination") 
+    not terralib.validKey(match_attributes, "source_port")
+    not terralib.validKey(match_attributes, "destination_port")
+    not terralib.validKey(match_attributes, "protocols")
+    not terralib.validKey(match_attributes, "tcp_flag")
+}
