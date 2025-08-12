@@ -1,0 +1,71 @@
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
+
+provider "aws" {
+  region                         = "us-west-2"
+  skip_credentials_validation    = true
+  skip_requesting_account_id     = true
+  skip_metadata_api_check        = true
+  access_key = "mock_access_key"
+  secret_key = "mock_secret_key"
+}
+
+# PASS TEST CASE 1: match_attributes with source only
+resource "aws_networkfirewall_rule_group" "pass_example_1" {
+  description = "Stateless Rule with Source Only"
+  capacity    = 100
+  name        = "pass-example-1"
+  type        = "STATELESS"
+  
+  rule_group {
+    rules_source {
+      stateless_rules_and_custom_actions {
+        stateless_rule {
+          priority = 1
+          rule_definition {
+            actions = ["aws:pass"]
+            # PASS: match_attributes has source - not empty
+            match_attributes {
+              source {
+                address_definition = "10.0.0.0/16"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+# PASS TEST CASE 2: match_attributes with multiple attributes
+resource "aws_networkfirewall_rule_group" "pass_example_2" {
+  description = "Stateless Rule with Multiple Match Attributes"
+  capacity    = 100
+  name        = "pass-example-2"
+  type        = "STATELESS"
+  
+  rule_group {
+    rules_source {
+      stateless_rules_and_custom_actions {
+        stateless_rule {
+          priority = 1
+          rule_definition {
+            actions = ["aws:drop"]
+            # PASS: match_attributes has multiple attributes - not empty
+            match_attributes {
+              source {
+                address_definition = "192.168.1.0/24"
+              }
+              destination {
+                address_definition = "10.0.1.0/24"
+              }
+              protocols = [6, 17]
+            }
+          }
+        }
