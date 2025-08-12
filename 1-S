@@ -1,0 +1,32 @@
+package wiz
+
+import data.generic.terraform as terralib
+
+# FAIL if match_attributes exists but is empty {}
+WizPolicy[result] {
+    resourceType := {"aws_networkfirewall_rule_group"}[_]
+    resource := input.document[i].resource[resourceType][name]
+
+    # Extract stateless_rule array safely
+    stateless_rules := terralib.getValueFromArrayOfObject(resource.rule_group.rules_source.stateless_rules_and_custom_actions.stateless_rule)
+
+    some idx
+    rule := stateless_rules[idx]
+
+    # match_attributes exists
+    terralib.validKey(rule.rule_definition, "match_attributes")
+
+    # Check if match_attributes is empty object
+    count(object.keys(rule.rule_definition.match_attributes)) == 0
+
+    result := {
+        "documentId": input.document[i].id,
+        "resourceName": terralib.get_resource_name(resource, name),
+        "resourceType": resourceType,
+        "searchKey": sprintf("%s[%s].rule_group.rules_source.stateless_rules_and_custom_actions.stateless_rule[%d].rule_definition.match_attributes", [resourceType, name, idx]),
+        "issueType": "EmptyMatchAttributes",
+        "keyExpectedValue": "match_attributes should contain at least one attribute",
+        "keyActualValue": "match_attributes is empty",
+        "resourceTags": object.get(resource, "tags", {}),
+    }
+}
