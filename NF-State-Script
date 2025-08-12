@@ -1,0 +1,40 @@
+package wiz
+
+import data.generic.common as commonLib
+import data.generic.terraform as terraLib
+
+# FAIL if the firewall rule group is STATEFUL
+WizPolicy[result] {
+    resource := input.document[i].resource.aws_networkfirewall_rule_group[name]
+    terraLib.validKey(resource, "type")
+    lower(resource.type) == "stateful"
+
+    result := {
+        "documentId": input.document[i].id,
+        "resourceType": "aws_networkfirewall_rule_group",
+        "resourceName": terraLib.get_resource_name(resource, name),
+        "searchKey": sprintf("aws_networkfirewall_rule_group[%s].type", [name]),
+        "issueType": "IncorrectValue",
+        "keyExpectedValue": "STATELESS",
+        "keyActualValue": resource.type,
+        "resourceTags": object.get(resource, "tags", {})
+    }
+}
+
+# PASS if the firewall rule group is STATELESS
+WizPolicy[result] {
+    resource := input.document[i].resource.aws_networkfirewall_rule_group[name]
+    terraLib.validKey(resource, "type")
+    lower(resource.type) == "stateless"
+
+    result := {
+        "documentId": input.document[i].id,
+        "resourceType": "aws_networkfirewall_rule_group",
+        "resourceName": terraLib.get_resource_name(resource, name),
+        "searchKey": sprintf("aws_networkfirewall_rule_group[%s].type", [name]),
+        "issueType": "Pass",
+        "keyExpectedValue": "STATELESS",
+        "keyActualValue": resource.type,
+        "resourceTags": object.get(resource, "tags", {})
+    }
+}
