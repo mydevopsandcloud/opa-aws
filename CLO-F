@@ -1,0 +1,142 @@
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
+
+provider "aws" {
+  region                         = "us-west-2"
+  skip_credentials_validation    = true
+  skip_requesting_account_id     = true
+  skip_metadata_api_check        = true
+  access_key = "mock_access_key"
+  secret_key = "mock_secret_key"
+}
+
+# FAIL TEST CASE 1: Completely empty match_attributes block
+resource "aws_networkfirewall_rule_group" "fail_example_1" {
+  description = "Stateless Rule with Empty Match Attributes"
+  capacity    = 100
+  name        = "fail-example-1"
+  type        = "STATELESS"
+  
+  rule_group {
+    rules_source {
+      stateless_rules_and_custom_actions {
+        stateless_rule {
+          priority = 1
+          rule_definition {
+            actions = ["aws:pass"]
+            # FAIL: match_attributes is completely empty
+            match_attributes {}
+          }
+        }
+      }
+    }
+  }
+}
+
+# FAIL TEST CASE 2: Multiple stateless rules with empty match_attributes
+resource "aws_networkfirewall_rule_group" "fail_example_2" {
+  description = "Multiple Stateless Rules with Empty Match Attributes"
+  capacity    = 200
+  name        = "fail-example-2"
+  type        = "STATELESS"
+  
+  rule_group {
+    rules_source {
+      stateless_rules_and_custom_actions {
+        stateless_rule {
+          priority = 1
+          rule_definition {
+            actions = ["aws:drop"]
+            # FAIL: First rule with empty match_attributes
+            match_attributes {}
+          }
+        }
+        
+        stateless_rule {
+          priority = 2
+          rule_definition {
+            actions = ["aws:pass"]
+            # FAIL: Second rule also with empty match_attributes
+            match_attributes {}
+          }
+        }
+      }
+    }
+  }
+}
+
+# FAIL TEST CASE 3: Rule with custom action but empty match_attributes
+resource "aws_networkfirewall_rule_group" "fail_example_3" {
+  description = "Rule with Custom Action and Empty Match Attributes"
+  capacity    = 100
+  name        = "fail-example-3"
+  type        = "STATELESS"
+  
+  rule_group {
+    rules_source {
+      stateless_rules_and_custom_actions {
+        custom_action {
+          action_definition {
+            publish_metric_action {
+              dimension {
+                value = "1"
+              }
+            }
+          }
+          action_name = "CustomMetricsAction"
+        }
+        
+        stateless_rule {
+          priority = 1
+          rule_definition {
+            actions = ["aws:pass", "CustomMetricsAction"]
+            # FAIL: match_attributes is empty despite having custom action
+            match_attributes {}
+          }
+        }
+      }
+    }
+  }
+}
+
+# FAIL TEST CASE 4: Mixed scenario - one valid rule, one invalid rule
+resource "aws_networkfirewall_rule_group" "fail_example_4" {
+  description = "Mixed Scenario with Valid and Invalid Rules"
+  capacity    = 200
+  name        = "fail-example-4"
+  type        = "STATELESS"
+  
+  rule_group {
+    rules_source {
+      stateless_rules_and_custom_actions {
+        stateless_rule {
+          priority = 1
+          rule_definition {
+            actions = ["aws:pass"]
+            # This rule is valid - has source
+            match_attributes {
+              source {
+                address_definition = "10.0.0.0/8"
+              }
+            }
+          }
+        }
+        
+        stateless_rule {
+          priority = 2
+          rule_definition {
+            actions = ["aws:drop"]
+            # FAIL: This rule is invalid - empty match_attributes
+            match_attributes {}
+          }
+        }
+      }
+    }
+  }
+}
