@@ -1,0 +1,55 @@
+package wiz
+
+import data.generic.terraform as terralib
+
+# FAIL when a stateless_rule.rule_definition.match_attributes exists and is an empty object {}
+WizPolicy[result] {
+    # resource type we are evaluating
+    resourceType := {"aws_networkfirewall_rule_group"}[_]
+
+    # iterate input documents and resource instances
+    some i
+    some name
+    resource := input.document[i].resource[resourceType][name]
+
+    # iterate rule_group blocks (safe: default to empty array)
+    rg_array := object.get(resource, "rule_group", [])
+    some rg_index
+    rg := rg_array[rg_index]
+
+    # iterate rules_source blocks
+    rs_array := object.get(rg, "rules_source", [])
+    some rs_index
+    rs := rs_array[rs_index]
+
+    # iterate stateless_rules_and_custom_actions blocks
+    srac_array := object.get(rs, "stateless_rules_and_custom_actions", [])
+    some srac_index
+    srac := srac_array[srac_index]
+
+    # iterate stateless_rule blocks
+    rules_array := object.get(srac, "stateless_rule", [])
+    some rule_index
+    rule := rules_array[rule_index]
+
+    # get rule_definition safely
+    rule_def := object.get(rule, "rule_definition", {})
+
+    # only consider when match_attributes key exists (we only fail on explicit empty {})
+    terralib.validKey(rule_def, "match_attributes")
+
+    # fail when match_attributes is an empty object
+    count(object.keys(rule_def.match_attributes)) == 0
+
+    # build result
+    result := {
+        "documentId": input.document[i].id,
+        "resourceName": terralib.get_resource_name(resource, name),
+        "resourceType": resourceType,
+        "searchKey": sprintf("%s[%s].rule_group[%d].rules_source[%d].stateless_rules_and_custom_actions[%d].stateless_rule[%d].rule_definition.match_attributes", [resourceType, name, rg_index, rs_index, srac_index, rule_index]),
+        "issueType": "EmptyMatchAttributes",
+        "keyExpectedValue": "match_attributes should contain at least one attribute",
+        "keyActualValue": "match_attributes is empty",
+        "resourceTags": object.get(resource, "tags", {}),
+    }
+}
