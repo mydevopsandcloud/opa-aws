@@ -1,0 +1,56 @@
+package wiz
+
+import data.generic.terraform as terraLib
+
+# Fail if stateless type but no stateless_rule present
+WizPolicy[result] {
+    resource := input.document[i].resource.aws_networkfirewall_rule_group[name]
+
+    # Check type attribute exists and equals "STATELESS" (case-insensitive)
+    terraLib.validKey(resource, "type")
+    lower(resource.type) == "stateless"
+
+    # Check nested keys exist
+    terraLib.validKey(resource, "rule_group")
+    terraLib.validKey(resource.rule_group[0], "rules_source")
+    terraLib.validKey(resource.rule_group[0].rules_source[0], "stateless_rules_and_custom_actions")
+
+    # Fail if stateless_rule key missing or empty
+    not terraLib.validKey(resource.rule_group[0].rules_source[0].stateless_rules_and_custom_actions[0], "stateless_rule")
+    result := {
+        "documentId": input.document[i].id,
+        "resourceType": "aws_networkfirewall_rule_group",
+        "resourceName": terraLib.get_resource_name(resource, name),
+        "searchKey": sprintf("aws_networkfirewall_rule_group[%s]", [name]),
+        "issueType": "MissingAttribute",
+        "keyExpectedValue": "At least one stateless_rule must be defined",
+        "keyActualValue": "No stateless_rule found",
+        "resourceTags": object.get(resource, "tags", {})
+    }
+}
+
+# Pass if stateless_rule exists and count > 0
+WizPolicy[result] {
+    resource := input.document[i].resource.aws_networkfirewall_rule_group[name]
+
+    terraLib.validKey(resource, "type")
+    lower(resource.type) == "stateless"
+
+    terraLib.validKey(resource, "rule_group")
+    terraLib.validKey(resource.rule_group[0], "rules_source")
+    terraLib.validKey(resource.rule_group[0].rules_source[0], "stateless_rules_and_custom_actions")
+    terraLib.validKey(resource.rule_group[0].rules_source[0].stateless_rules_and_custom_actions[0], "stateless_rule")
+
+    count(resource.rule_group[0].rules_source[0].stateless_rules_and_custom_actions[0].stateless_rule) > 0
+
+    result := {
+        "documentId": input.document[i].id,
+        "resourceType": "aws_networkfirewall_rule_group",
+        "resourceName": terraLib.get_resource_name(resource, name),
+        "searchKey": sprintf("aws_networkfirewall_rule_group[%s]", [name]),
+        "issueType": "Pass",
+        "keyExpectedValue": "At least one stateless_rule must be defined",
+        "keyActualValue": sprintf("%d stateless_rule(s) found", [count(resource.rule_group[0].rules_source[0].stateless_rules_and_custom_actions[0].stateless_rule)]),
+        "resourceTags": object.get(resource, "tags", {})
+    }
+}
