@@ -1,0 +1,62 @@
+package wiz
+
+import data.generic.terraform as terralib
+
+# Resource types to check
+resourceTypes := {"aws_networkfirewall_rule_group"}
+
+WizPolicy[result] {
+    resourceType := resourceTypes[_]
+    resource := input.document[i].resource[resourceType][name]
+
+    # Only process if resource has rule_group with stateless_rules_and_custom_actions
+    rule_group := resource.rule_group
+    rules_source := rule_group.rules_source
+    stateless := rules_source.stateless_rules_and_custom_actions
+
+    # Check if any stateless_rule has empty match_attributes -> FAIL
+    some idx
+    stateless_rule := stateless.stateless_rule[idx]
+    match_attrs := stateless_rule.rule_definition.match_attributes
+
+    # match_attributes is empty if object keys count is zero
+    is_empty := count(object.keys(match_attrs)) == 0
+
+    is_empty
+
+    # Build the fail result
+    result := {
+        "documentId": input.document[i].id,
+        "resourceName": terralib.get_resource_name(resource, name),
+        "resourceType": resourceType,
+        "searchKey": sprintf("%s[%s].rule_group.rules_source.stateless_rules_and_custom_actions.stateless_rule[%d].rule_definition.match_attributes", [resourceType, name, idx]),
+        "issueType": "EmptyMatchAttributes",
+        "keyExpectedValue": "match_attributes should not be empty",
+        "keyActualValue": "match_attributes is empty",
+        "resourceTags": object.get(resource, "tags", {}),
+    }
+}
+
+# If no empty match_attributes found, rule PASS (return empty)
+WizPolicy[result] {
+    resourceType := resourceTypes[_]
+    resource := input.document[i].resource[resourceType][name]
+
+    rule_group := resource.rule_group
+    rules_source := rule_group.rules_source
+    stateless := rules_source.stateless_rules_and_custom_actions
+
+    # Ensure all stateless_rules have non-empty match_attributes
+    all_non_empty := true
+    not some idx {
+        stateless_rule := stateless.stateless_rule[idx]
+        match_attrs := stateless_rule.rule_definition.match_attributes
+        count(object.keys(match_attrs)) == 0
+    }
+
+    all_non_empty
+
+    # No result means PASS, so no issues to report
+    # Return empty set, Wiz CSPM interprets as PASS
+    result := {}
+}
