@@ -1,0 +1,55 @@
+package wiz
+
+import data.generic.terraform as terralib
+
+WizPolicy[result] {
+    resourceType := "aws_networkfirewall_rule_group"
+
+    some i
+    some name
+    resource := input.document[i].resource[resourceType][name]
+
+    rg_array := object.get(resource, "rule_group", [])
+    some rg_index
+    rg := rg_array[rg_index]
+
+    rs_array := object.get(rg, "rules_source", [])
+    some rs_index
+    rs := rs_array[rs_index]
+
+    srac_array := object.get(rs, "stateless_rules_and_custom_actions", [])
+    some srac_index
+    srac := srac_array[srac_index]
+
+    rules_array := object.get(srac, "stateless_rule", [])
+    some rule_index
+    rule := rules_array[rule_index]
+
+    rule_def := object.get(rule, "rule_definition", {})
+
+    # Fail if match_attributes is missing OR empty object OR empty array
+    not valid_match_attributes(rule_def)
+
+    result := {
+        "documentId": input.document[i].id,
+        "resourceName": terralib.get_resource_name(resource, name),
+        "resourceType": resourceType,
+        "searchKey": sprintf("%s[%s].rule_group[%d].rules_source[%d].stateless_rules_and_custom_actions[%d].stateless_rule[%d].rule_definition.match_attributes", [resourceType, name, rg_index, rs_index, srac_index, rule_index]),
+        "issueType": "InvalidMatchAttributes",
+        "keyExpectedValue": "match_attributes should contain at least one non-empty attribute",
+        "keyActualValue": sprintf("%v", [rule_def.match_attributes]),
+        "resourceTags": object.get(resource, "tags", {}),
+    }
+}
+
+valid_match_attributes(rule_def) {
+    terralib.validKey(rule_def, "match_attributes")
+    ma := rule_def.match_attributes
+    count(object.keys(ma)) > 0
+}
+
+valid_match_attributes(rule_def) {
+    terralib.validKey(rule_def, "match_attributes")
+    ma := rule_def.match_attributes
+    count(ma) > 0
+}
