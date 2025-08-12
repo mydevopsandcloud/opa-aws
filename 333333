@@ -1,0 +1,16 @@
+resource "aws_networkfirewall_rule_group" "fail_case_no_block" {
+  name        = "stateless-fail-no-block"
+  description = "Stateless rule group without stateless_rules_and_custom_actions block"
+  capacity    = 100
+  type        = "STATELESS"
+
+  rule_group {
+    rules_source {
+      # NO stateless_rules_and_custom_actions block here
+    }
+  }
+
+  tags = {
+    Env = "TestFailNoBlock"
+  }
+}
