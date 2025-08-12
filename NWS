@@ -1,0 +1,45 @@
+package wiz
+
+import data.generic.common as commonLib
+import data.generic.terraform as terraLib
+
+# FAIL if aws_networkfirewall_rule_group has type STATELESS but no stateless_rule block
+WizPolicy[result] {
+    resource := input.document[i].resource.aws_networkfirewall_rule_group[name]
+    lower(terraLib.get_attribute(resource, "type")) == "stateless"
+
+    not terraLib.validKey(resource.rule_group[0].rules_source[0], "stateless_rules_and_custom_actions")
+    
+    result := {
+        "documentId": input.document[i].id,
+        "resourceType": "aws_networkfirewall_rule_group",
+        "resourceName": terraLib.get_resource_name(resource, name),
+        "searchKey": sprintf("aws_networkfirewall_rule_group[%s]", [name]),
+        "issueType": "MissingAttribute",
+        "keyExpectedValue": sprintf("aws_networkfirewall_rule_group[%s].rule_group[0].rules_source[0].stateless_rules_and_custom_actions should have at least one stateless_rule", [name]),
+        "keyActualValue": "No stateless rules found",
+        "resourceTags": object.get(resource, "tags", {})
+    }
+}
+
+# PASS if aws_networkfirewall_rule_group has type STATELESS and at least one stateless_rule exists
+WizPolicy[result] {
+    resource := input.document[i].resource.aws_networkfirewall_rule_group[name]
+    lower(terraLib.get_attribute(resource, "type")) == "stateless"
+
+    some idx
+    resource.rule_group[0].rules_source[0].stateless_rules_and_custom_actions[0].stateless_rule[idx]
+
+    count(resource.rule_group[0].rules_source[0].stateless_rules_and_custom_actions[0].stateless_rule) > 0
+
+    result := {
+        "documentId": input.document[i].id,
+        "resourceType": "aws_networkfirewall_rule_group",
+        "resourceName": terraLib.get_resource_name(resource, name),
+        "searchKey": sprintf("aws_networkfirewall_rule_group[%s]", [name]),
+        "issueType": "Pass",
+        "keyExpectedValue": "At least one stateless rule exists",
+        "keyActualValue": sprintf("%d stateless rules found", [count(resource.rule_group[0].rules_source[0].stateless_rules_and_custom_actions[0].stateless_rule)]),
+        "resourceTags": object.get(resource, "tags", {})
+    }
+}
