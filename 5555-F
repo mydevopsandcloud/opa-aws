@@ -1,9 +1,157 @@
-resource "aws_networkfirewall_firewall_policy" "fail_policy" {
-  name = "fail-policy"
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
+
+provider "aws" {
+  region                      = "us-west-2"
+  skip_credentials_validation = true
+  skip_requesting_account_id  = true
+  skip_metadata_api_check     = true
+  access_key                  = "mock_access_key"
+  secret_key                  = "mock_secret_key"
+}
+
+# FAIL TEST CASE 1: Network Firewall Policy without firewall_policy block
+resource "aws_networkfirewall_firewall_policy" "fail_example_1" {
+  name = "fail-firewall-policy-1"
+  
+  # FAIL: Missing firewall_policy block entirely
+  
+  tags = {
+    Environment = "test"
+    Purpose     = "fail-case-no-policy-block"
+  }
+}
+
+# FAIL TEST CASE 2: Network Firewall Policy with firewall_policy but no stateless_rule_group_reference
+resource "aws_networkfirewall_firewall_policy" "fail_example_2" {
+  name = "fail-firewall-policy-2"
 
   firewall_policy {
-    # No stateless_rule_group_reference present
-    stateless_default_actions            = ["aws:forward_to_sfe"]
-    stateless_fragment_default_actions   = ["aws:forward_to_sfe"]
+    # FAIL: Missing stateless_rule_group_reference entirely
+    stateless_default_actions          = ["aws:drop"]
+    stateless_fragment_default_actions = ["aws:drop"]
+  }
+
+  tags = {
+    Environment = "test"
+    Purpose     = "fail-case-no-stateless-reference"
+  }
+}
+
+# FAIL TEST CASE 3: Network Firewall Policy with empty stateless_rule_group_reference
+resource "aws_networkfirewall_firewall_policy" "fail_example_3" {
+  name = "fail-firewall-policy-3"
+
+  firewall_policy {
+    # FAIL: Empty stateless_rule_group_reference (this would be invalid Terraform, but represents the concept)
+    # Note: In actual Terraform, you can't have an empty block like this, but the Rego rule handles this scenario
+    
+    stateless_default_actions          = ["aws:forward_to_sfe"]
+    stateless_fragment_default_actions = ["aws:forward_to_sfe"]
+  }
+
+  tags = {
+    Environment = "test"
+    Purpose     = "fail-case-empty-stateless-reference"
+  }
+}
+
+# FAIL TEST CASE 4: Network Firewall Policy with only stateful rule groups (no stateless)
+resource "aws_networkfirewall_rule_group" "stateful_only_rule_group" {
+  description = "Stateful Rule Group Only"
+  capacity    = 100
+  name        = "test-stateful-only-rule-group"
+  type        = "STATEFUL"
+  
+  rule_group {
+    rules_source {
+      rules_string = <<EOF
+drop tcp any any -> any 22 (msg:"Block SSH"; sid:1; rev:1;)
+pass tcp any any -> any 80 (msg:"Allow HTTP"; sid:2; rev:1;)
+EOF
+    }
+  }
+}
+
+resource "aws_networkfirewall_firewall_policy" "fail_example_4" {
+  name = "fail-firewall-policy-4"
+
+  firewall_policy {
+    # FAIL: Only has stateful rule group, no stateless rule group reference
+    stateful_rule_group_reference {
+      resource_arn = aws_networkfirewall_rule_group.stateful_only_rule_group.arn
+    }
+
+    stateless_default_actions          = ["aws:forward_to_sfe"]
+    stateless_fragment_default_actions = ["aws:forward_to_sfe"]
+  }
+
+  tags = {
+    Environment = "production"
+    Purpose     = "fail-case-stateful-only"
+  }
+}
+
+# FAIL TEST CASE 5: Network Firewall Policy with complex configuration but no stateless rules
+resource "aws_networkfirewall_rule_group" "domain_list_rule_group" {
+  description = "Domain List Rule Group"
+  capacity    = 100
+  name        = "test-domain-list-rule-group"
+  type        = "STATEFUL"
+  
+  rule_group {
+    rules_source {
+      rules_source_list {
+        generated_rules_type = "DENYLIST"
+        target_types         = ["HTTP_HOST", "TLS_SNI"]
+        targets              = ["malicious.example.com", "bad-actor.com"]
+      }
+    }
+  }
+}
+
+resource "aws_networkfirewall_firewall_policy" "fail_example_5" {
+  name = "fail-firewall-policy-5"
+
+  firewall_policy {
+    # FAIL: Complex policy with domain lists and other settings but no stateless rule groups
+    stateful_rule_group_reference {
+      resource_arn = aws_networkfirewall_rule_group.domain_list_rule_group.arn
+    }
+
+    stateful_engine_options {
+      rule_order = "STRICT_ORDER"
+    }
+
+    stateless_default_actions          = ["aws:forward_to_sfe"]
+    stateless_fragment_default_actions = ["aws:drop"]
+  }
+
+  tags = {
+    Environment = "production"
+    Purpose     = "fail-case-complex-but-no-stateless"
+    Compliance  = "required"
+  }
+}
+
+# FAIL TEST CASE 6: Minimal Network Firewall Policy configuration
+resource "aws_networkfirewall_firewall_policy" "fail_example_6" {
+  name = "fail-firewall-policy-6"
+
+  firewall_policy {
+    # FAIL: Minimal configuration without any rule group references
+    stateless_default_actions          = ["aws:drop"]
+    stateless_fragment_default_actions = ["aws:drop"]
+  }
+
+  tags = {
+    Environment = "development"
+    Purpose     = "fail-case-minimal-config"
   }
 }
