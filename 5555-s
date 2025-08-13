@@ -3,64 +3,30 @@ package wiz
 import data.generic.common as common_lib
 import data.generic.terraform as terralib
 
-# Check if AWS Network Firewall policy is associated with stateless rule groups
-# Rule FAILS/NON-Compliant if no stateless rule group is associated with the Network Firewall policy
+# Check if AWS Network Firewall policy has a stateless rule group associated
 WizPolicy[result] {
-    resource := input.document[i].resource.aws_networkfirewall_firewall_policy[name]
-    
-    # Check if firewall_policy block exists
-    not terralib.validKey(resource, "firewall_policy")
-    
-    result := {
-        "documentId": input.document[i].id,
-        "resourceName": terralib.get_resource_name(resource, name),
-        "resourceType": "aws_networkfirewall_firewall_policy",
-        "searchKey": sprintf("aws_networkfirewall_firewall_policy[%s]", [name]),
-        "issueType": "MissingAttribute",
-        "keyExpectedValue": sprintf("'aws_networkfirewall_firewall_policy[%s].firewall_policy' should be defined", [name]),
-        "keyActualValue": sprintf("'aws_networkfirewall_firewall_policy[%s].firewall_policy' is undefined", [name]),
-        "resourceTags": object.get(resource, "tags", {}),
-    }
-}
+    resourceType := "aws_networkfirewall_firewall_policy"
+    resource := input.document[i].resource[resourceType][name]
 
-WizPolicy[result] {
-    resource := input.document[i].resource.aws_networkfirewall_firewall_policy[name]
-    terralib.validKey(resource, "firewall_policy")
-    firewall_policy := resource.firewall_policy[_]
-    
-    # Check if stateless_rule_group_reference exists
-    not terralib.validKey(firewall_policy, "stateless_rule_group_reference")
-    
-    result := {
-        "documentId": input.document[i].id,
-        "resourceName": terralib.get_resource_name(resource, name),
-        "resourceType": "aws_networkfirewall_firewall_policy",
-        "searchKey": sprintf("aws_networkfirewall_firewall_policy[%s].firewall_policy", [name]),
-        "issueType": "MissingAttribute",
-        "keyExpectedValue": sprintf("'aws_networkfirewall_firewall_policy[%s].firewall_policy.stateless_rule_group_reference' should be defined", [name]),
-        "keyActualValue": sprintf("'aws_networkfirewall_firewall_policy[%s].firewall_policy.stateless_rule_group_reference' is undefined", [name]),
-        "resourceTags": object.get(resource, "tags", {}),
-    }
-}
+    # Get firewall policy definition
+    firewall_policy := terralib.getValueFromArrayOfObject(resource.firewall_policy)
 
-WizPolicy[result] {
-    resource := input.document[i].resource.aws_networkfirewall_firewall_policy[name]
-    terralib.validKey(resource, "firewall_policy")
-    firewall_policy := resource.firewall_policy[_]
-    
-    # Check if stateless_rule_group_reference exists but is empty array
-    terralib.validKey(firewall_policy, "stateless_rule_group_reference")
-    stateless_rule_groups := firewall_policy.stateless_rule_group_reference
-    count(stateless_rule_groups) == 0
-    
+    # Extract stateless rule groups from the policy
+    stateless_groups := [ g.rule_group_arn |
+        g := firewall_policy.stateless_rule_group_reference[_]
+    ]
+
+    # Fail if no stateless rule groups found
+    count(stateless_groups) == 0
+
     result := {
         "documentId": input.document[i].id,
         "resourceName": terralib.get_resource_name(resource, name),
-        "resourceType": "aws_networkfirewall_firewall_policy",
-        "searchKey": sprintf("aws_networkfirewall_firewall_policy[%s].firewall_policy.stateless_rule_group_reference", [name]),
-        "issueType": "IncorrectValue",
-        "keyExpectedValue": sprintf("'aws_networkfirewall_firewall_policy[%s].firewall_policy.stateless_rule_group_reference' should have at least one stateless rule group", [name]),
-        "keyActualValue": sprintf("'aws_networkfirewall_firewall_policy[%s].firewall_policy.stateless_rule_group_reference' is empty", [name]),
+        "resourceType": resourceType,
+        "searchKey": sprintf("%s[%s].firewall_policy", [resourceType, name]),
+        "issueType": "MissingAssociation",
+        "keyExpectedValue": "At least one stateless rule group should be associated",
+        "keyActualValue": "No stateless rule group is associated",
         "resourceTags": object.get(resource, "tags", {}),
     }
 }
