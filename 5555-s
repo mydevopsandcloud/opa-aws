@@ -1,32 +1,28 @@
 package wiz
 
+import data.generic.common as common_lib
 import data.generic.terraform as terralib
 
 WizPolicy[result] {
-    resourceType := "aws_networkfirewall_firewall_policy"
+    # Only check aws_networkfirewall_rule_group resources
+    resourceType := ["aws_networkfirewall_rule_group"]
+    some idx
     some name
-    resource := input.document[i].resource[resourceType][name]
 
-    firewall_policy := terralib.getValueFromArrayOfObject(resource.firewall_policy)
-    stateless_refs := object.get(firewall_policy, "stateless_rule_group_reference", [])
+    resource := input.document[i].resource[resourceType[idx]][name]
 
-    # No stateless_rule_group_reference means Fail
-    not has_stateless_rule_group(stateless_refs)
+    # Check if the resource type is not STATELESS
+    not terralib.validKey(resource, "type")
+    resource.type != "STATELESS"
 
     result := {
         "documentId": input.document[i].id,
         "resourceName": terralib.get_resource_name(resource, name),
-        "resourceType": resourceType,
-        "searchKey": sprintf("%s[%s].firewall_policy.stateless_rule_group_reference", [resourceType, name]),
-        "issueType": "MissingAssociation",
-        "keyExpectedValue": "At least one stateless rule group should be associated",
-        "keyActualValue": "No stateless rule group is associated",
+        "resourceType": resourceType[idx],
+        "searchKey": sprintf("%s[%s].type", [resourceType[idx], name]),
+        "issueType": "InvalidConfiguration",
+        "keyExpectedValue": "'type' should be 'STATELESS'",
+        "keyActualValue": sprintf("type is '%s'", [resource.type]),
         "resourceTags": object.get(resource, "tags", {}),
     }
-}
-
-has_stateless_rule_group(refs) {
-    some i
-    ref := refs[i]
-    ref.rule_group_arn != ""
 }
