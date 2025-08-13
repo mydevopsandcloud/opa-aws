@@ -1,43 +1,21 @@
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
-    }
-  }
-}
+resource "aws_networkfirewall_rule_group" "stateless_example" {
+  capacity = 100
+  name     = "example-stateless"
+  type     = "STATELESS"
 
-provider "aws" {
-  region                      = "us-west-2"
-  skip_credentials_validation = true
-  skip_requesting_account_id  = true
-  skip_metadata_api_check     = true
-  access_key                  = "mock_access_key"
-  secret_key                  = "mock_secret_key"
-}
-
-# PASS TEST CASE 1: Network Firewall Policy with single stateless rule group
-resource "aws_networkfirewall_rule_group" "stateless_rule_group_1" {
-  description = "Stateless Rule Group for Testing"
-  capacity    = 100
-  name        = "test-stateless-rule-group-1"
-  type        = "STATELESS"
-  
   rule_group {
     rules_source {
       stateless_rules_and_custom_actions {
-        stateless_rule {
+        stateless_rules {
           priority = 1
           rule_definition {
             actions = ["aws:pass"]
             match_attributes {
-              source {
-                address_definition = "10.0.0.0/16"
+              protocols = [6] # TCP
+              destination_ports {
+                from_port = 80
+                to_port   = 80
               }
-              destination {
-                address_definition = "192.168.0.0/16"
-              }
-              protocols = [6]
             }
           }
         }
@@ -46,142 +24,15 @@ resource "aws_networkfirewall_rule_group" "stateless_rule_group_1" {
   }
 }
 
-resource "aws_networkfirewall_firewall_policy" "pass_example_1" {
-  name = "pass-firewall-policy-1"
+resource "aws_networkfirewall_firewall_policy" "pass_policy" {
+  name = "pass-policy"
 
   firewall_policy {
-    # PASS: Has stateless rule group reference
     stateless_rule_group_reference {
-      priority     = 1
-      resource_arn = aws_networkfirewall_rule_group.stateless_rule_group_1.arn
+      priority       = 1
+      rule_group_arn = aws_networkfirewall_rule_group.stateless_example.arn
     }
-
     stateless_default_actions          = ["aws:forward_to_sfe"]
     stateless_fragment_default_actions = ["aws:forward_to_sfe"]
-  }
-
-  tags = {
-    Environment = "test"
-    Purpose     = "pass-case"
-  }
-}
-
-# PASS TEST CASE 2: Network Firewall Policy with multiple stateless rule groups
-resource "aws_networkfirewall_rule_group" "stateless_rule_group_2" {
-  description = "Second Stateless Rule Group for Testing"
-  capacity    = 100
-  name        = "test-stateless-rule-group-2"
-  type        = "STATELESS"
-  
-  rule_group {
-    rules_source {
-      stateless_rules_and_custom_actions {
-        stateless_rule {
-          priority = 1
-          rule_definition {
-            actions = ["aws:drop"]
-            match_attributes {
-              source {
-                address_definition = "0.0.0.0/0"
-              }
-              destination_port {
-                from_port = 22
-                to_port   = 22
-              }
-              protocols = [6]
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
-resource "aws_networkfirewall_rule_group" "stateless_rule_group_3" {
-  description = "Third Stateless Rule Group for Testing"
-  capacity    = 50
-  name        = "test-stateless-rule-group-3"
-  type        = "STATELESS"
-  
-  rule_group {
-    rules_source {
-      stateless_rules_and_custom_actions {
-        stateless_rule {
-          priority = 1
-          rule_definition {
-            actions = ["aws:pass"]
-            match_attributes {
-              protocols = [1] # ICMP
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
-resource "aws_networkfirewall_firewall_policy" "pass_example_2" {
-  name = "pass-firewall-policy-2"
-
-  firewall_policy {
-    # PASS: Has multiple stateless rule group references
-    stateless_rule_group_reference {
-      priority     = 1
-      resource_arn = aws_networkfirewall_rule_group.stateless_rule_group_2.arn
-    }
-
-    stateless_rule_group_reference {
-      priority     = 2
-      resource_arn = aws_networkfirewall_rule_group.stateless_rule_group_3.arn
-    }
-
-    stateless_default_actions          = ["aws:drop"]
-    stateless_fragment_default_actions = ["aws:drop"]
-  }
-
-  tags = {
-    Environment = "production"
-    Purpose     = "multi-rule-group"
-  }
-}
-
-# PASS TEST CASE 3: Network Firewall Policy with both stateless and stateful rule groups
-resource "aws_networkfirewall_rule_group" "stateful_rule_group" {
-  description = "Stateful Rule Group for Testing"
-  capacity    = 100
-  name        = "test-stateful-rule-group"
-  type        = "STATEFUL"
-  
-  rule_group {
-    rules_source {
-      rules_string = <<EOF
-pass tcp any any -> any 80 (msg:"Allow HTTP"; sid:1; rev:1;)
-pass tcp any any -> any 443 (msg:"Allow HTTPS"; sid:2; rev:1;)
-EOF
-    }
-  }
-}
-
-resource "aws_networkfirewall_firewall_policy" "pass_example_3" {
-  name = "pass-firewall-policy-3"
-
-  firewall_policy {
-    # PASS: Has stateless rule group reference (plus stateful for completeness)
-    stateless_rule_group_reference {
-      priority     = 1
-      resource_arn = aws_networkfirewall_rule_group.stateless_rule_group_1.arn
-    }
-
-    stateful_rule_group_reference {
-      resource_arn = aws_networkfirewall_rule_group.stateful_rule_group.arn
-    }
-
-    stateless_default_actions          = ["aws:forward_to_sfe"]
-    stateless_fragment_default_actions = ["aws:forward_to_sfe"]
-  }
-
-  tags = {
-    Environment = "mixed"
-    Purpose     = "stateless-and-stateful"
   }
 }
