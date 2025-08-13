@@ -1,0 +1,32 @@
+package wiz
+
+import data.generic.common as common_lib
+import data.generic.terraform as terralib
+
+# Check if AWS Network Firewall policy has a stateless rule group associated
+WizPolicy[result] {
+    resourceType := "aws_networkfirewall_firewall_policy"
+    resource := input.document[i].resource[resourceType][name]
+
+    # Get firewall policy definition
+    firewall_policy := terralib.getValueFromArrayOfObject(resource.firewall_policy)
+
+    # Extract stateless rule groups from the policy
+    stateless_groups := [ g.rule_group_arn |
+        g := firewall_policy.stateless_rule_group_reference[_]
+    ]
+
+    # Fail if no stateless rule groups found
+    count(stateless_groups) == 0
+
+    result := {
+        "documentId": input.document[i].id,
+        "resourceName": terralib.get_resource_name(resource, name),
+        "resourceType": resourceType,
+        "searchKey": sprintf("%s[%s].firewall_policy", [resourceType, name]),
+        "issueType": "MissingAssociation",
+        "keyExpectedValue": "At least one stateless rule group should be associated",
+        "keyActualValue": "No stateless rule group is associated",
+        "resourceTags": object.get(resource, "tags", {}),
+    }
+}
