@@ -1,0 +1,14 @@
+{
+  "properties": {
+    "publicNetworkAccess": "Enabled"
+  },
+  "Firewall": {
+    "rule1": {
+      "name": "AllowAllIPv4",
+      "properties": {
+        "startIP": "0.0.0.0",
+        "endIP": "255.255.255.255"
+      }
+    }
+  }
+}
