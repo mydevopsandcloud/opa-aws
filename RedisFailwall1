@@ -1,0 +1,203 @@
+{
+  "pass_scenarios": [
+    {
+      "description": "Public network access disabled",
+      "input": {
+        "properties": {
+          "publicNetworkAccess": "Disabled"
+        },
+        "Firewall": [
+          {
+            "name": "AllowAll",
+            "properties": {
+              "startIP": "0.0.0.0",
+              "endIP": "255.255.255.255"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "description": "Restricted IP range with public access enabled",
+      "input": {
+        "properties": {
+          "publicNetworkAccess": "Enabled"
+        },
+        "Firewall": [
+          {
+            "name": "OfficeNetwork",
+            "properties": {
+              "startIP": "10.0.0.0",
+              "endIP": "10.0.0.255"
+            }
+          },
+          {
+            "name": "ProductionServers",
+            "properties": {
+              "startIP": "192.168.1.100",
+              "endIP": "192.168.1.200"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "description": "Single IP address allowed",
+      "input": {
+        "properties": {
+          "publicNetworkAccess": "Enabled"
+        },
+        "Firewall": [
+          {
+            "name": "AdminAccess",
+            "properties": {
+              "startIP": "203.0.113.5",
+              "endIP": "203.0.113.5"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "description": "No firewall rules defined",
+      "input": {
+        "properties": {
+          "publicNetworkAccess": "Enabled"
+        },
+        "Firewall": []
+      }
+    },
+    {
+      "description": "Mixed case 'enabled' with restricted rules",
+      "input": {
+        "properties": {
+          "publicNetworkAccess": "ENABLED"
+        },
+        "Firewall": [
+          {
+            "name": "LimitedAccess",
+            "properties": {
+              "startIP": "172.16.0.0",
+              "endIP": "172.16.255.255"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "fail_scenarios": [
+    {
+      "description": "Allow all IPv4 addresses with public access enabled",
+      "input": {
+        "properties": {
+          "publicNetworkAccess": "Enabled"
+        },
+        "Firewall": [
+          {
+            "name": "AllowAll",
+            "properties": {
+              "startIP": "0.0.0.0",
+              "endIP": "255.255.255.255"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "description": "Multiple rules with one allowing all IPs",
+      "input": {
+        "properties": {
+          "publicNetworkAccess": "Enabled"
+        },
+        "Firewall": [
+          {
+            "name": "OfficeNetwork",
+            "properties": {
+              "startIP": "10.0.0.0",
+              "endIP": "10.0.0.255"
+            }
+          },
+          {
+            "name": "OpenAccess",
+            "properties": {
+              "startIP": "0.0.0.0",
+              "endIP": "255.255.255.255"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "description": "Mixed case 'enabled' with unrestricted rule",
+      "input": {
+        "properties": {
+          "publicNetworkAccess": "enabled"
+        },
+        "Firewall": [
+          {
+            "name": "WideOpen",
+            "properties": {
+              "startIP": "0.0.0.0",
+              "endIP": "255.255.255.255"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "description": "Upper case 'ENABLED' with multiple unrestricted rules",
+      "input": {
+        "properties": {
+          "publicNetworkAccess": "ENABLED"
+        },
+        "Firewall": [
+          {
+            "name": "Rule1",
+            "properties": {
+              "startIP": "0.0.0.0",
+              "endIP": "255.255.255.255"
+            }
+          },
+          {
+            "name": "Rule2",
+            "properties": {
+              "startIP": "0.0.0.0",
+              "endIP": "255.255.255.255"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "description": "Mix of restricted and unrestricted rules",
+      "input": {
+        "properties": {
+          "publicNetworkAccess": "Enabled"
+        },
+        "Firewall": [
+          {
+            "name": "RestrictedRule",
+            "properties": {
+              "startIP": "192.168.1.0",
+              "endIP": "192.168.1.255"
+            }
+          },
+          {
+            "name": "UnrestrictedRule",
+            "properties": {
+              "startIP": "0.0.0.0",
+              "endIP": "255.255.255.255"
+            }
+          },
+          {
+            "name": "AnotherRestrictedRule",
+            "properties": {
+              "startIP": "10.0.0.1",
+              "endIP": "10.0.0.10"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
