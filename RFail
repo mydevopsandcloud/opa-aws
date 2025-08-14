@@ -1,0 +1,96 @@
+{
+  "testCases": [
+    {
+      "description": "Public network access enabled with unrestricted firewall rule - should fail",
+      "input": {
+        "properties": {
+          "publicNetworkAccess": "enabled"
+        },
+        "Firewall": [
+          {
+            "rule": "rule1",
+            "properties": {
+              "startIP": "0.0.0.0",
+              "endIP": "255.255.255.255"
+            },
+            "name": "AllowAll"
+          }
+        ]
+      },
+      "expectedResult": "fail"
+    },
+    {
+      "description": "Mixed firewall rules with one unrestricted - should fail",
+      "input": {
+        "properties": {
+          "publicNetworkAccess": "enabled"
+        },
+        "Firewall": [
+          {
+            "rule": "rule1",
+            "properties": {
+              "startIP": "192.168.1.0",
+              "endIP": "192.168.1.255"
+            },
+            "name": "AllowPrivateNetwork"
+          },
+          {
+            "rule": "rule2",
+            "properties": {
+              "startIP": "0.0.0.0",
+              "endIP": "255.255.255.255"
+            },
+            "name": "AllowEverything"
+          }
+        ]
+      },
+      "expectedResult": "fail"
+    },
+    {
+      "description": "Multiple unrestricted firewall rules - should fail",
+      "input": {
+        "properties": {
+          "publicNetworkAccess": "Enabled"
+        },
+        "Firewall": [
+          {
+            "rule": "rule1",
+            "properties": {
+              "startIP": "0.0.0.0",
+              "endIP": "255.255.255.255"
+            },
+            "name": "AllowAll_Rule1"
+          },
+          {
+            "rule": "rule2",
+            "properties": {
+              "startIP": "0.0.0.0",
+              "endIP": "255.255.255.255"
+            },
+            "name": "AllowAll_Rule2"
+          }
+        ]
+      },
+      "expectedResult": "fail"
+    },
+    {
+      "description": "Case insensitive public network access with unrestricted rule - should fail",
+      "input": {
+        "properties": {
+          "publicNetworkAccess": "ENABLED"
+        },
+        "Firewall": [
+          {
+            "rule": "rule1",
+            "properties": {
+              "startIP": "0.0.0.0",
+              "endIP": "255.255.255.255"
+            },
+            "name": "UnrestrictedAccess"
+          }
+        ]
+      },
+      "expectedResult": "fail"
+    }
+  ]
+}
