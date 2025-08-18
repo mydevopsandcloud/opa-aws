@@ -1,0 +1,191 @@
+{
+  "testCases": {
+    "pass": [
+      {
+        "description": "Azure AI Search with approved private endpoint connection",
+        "input": {
+          "Properties": {
+            "PrivateEndpointConnections": [
+              {
+                "Properties": {
+                  "PrivateLinkServiceConnectionState": {
+                    "Status": "Approved"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "expectedResult": "pass"
+      },
+      {
+        "description": "Azure AI Search with multiple private endpoints, at least one approved",
+        "input": {
+          "Properties": {
+            "PrivateEndpointConnections": [
+              {
+                "Properties": {
+                  "PrivateLinkServiceConnectionState": {
+                    "Status": "Pending"
+                  }
+                }
+              },
+              {
+                "Properties": {
+                  "PrivateLinkServiceConnectionState": {
+                    "Status": "Approved"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "expectedResult": "pass"
+      },
+      {
+        "description": "Azure AI Search with approved status in lowercase",
+        "input": {
+          "Properties": {
+            "PrivateEndpointConnections": [
+              {
+                "Properties": {
+                  "PrivateLinkServiceConnectionState": {
+                    "Status": "approved"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "expectedResult": "pass"
+      },
+      {
+        "description": "Azure AI Search with approved status in mixed case",
+        "input": {
+          "Properties": {
+            "PrivateEndpointConnections": [
+              {
+                "Properties": {
+                  "PrivateLinkServiceConnectionState": {
+                    "Status": "ApProved"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "expectedResult": "pass"
+      }
+    ],
+    "fail": [
+      {
+        "description": "Azure AI Search with no private endpoint connections",
+        "input": {
+          "Properties": {
+            "PrivateEndpointConnections": []
+          }
+        },
+        "expectedResult": "fail"
+      },
+      {
+        "description": "Azure AI Search with pending private endpoint connection",
+        "input": {
+          "Properties": {
+            "PrivateEndpointConnections": [
+              {
+                "Properties": {
+                  "PrivateLinkServiceConnectionState": {
+                    "Status": "Pending"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "expectedResult": "fail"
+      },
+      {
+        "description": "Azure AI Search with rejected private endpoint connection",
+        "input": {
+          "Properties": {
+            "PrivateEndpointConnections": [
+              {
+                "Properties": {
+                  "PrivateLinkServiceConnectionState": {
+                    "Status": "Rejected"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "expectedResult": "fail"
+      },
+      {
+        "description": "Azure AI Search with multiple private endpoints, none approved",
+        "input": {
+          "Properties": {
+            "PrivateEndpointConnections": [
+              {
+                "Properties": {
+                  "PrivateLinkServiceConnectionState": {
+                    "Status": "Pending"
+                  }
+                }
+              },
+              {
+                "Properties": {
+                  "PrivateLinkServiceConnectionState": {
+                    "Status": "Rejected"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "expectedResult": "fail"
+      },
+      {
+        "description": "Azure AI Search with missing PrivateEndpointConnections property",
+        "input": {
+          "Properties": {}
+        },
+        "expectedResult": "fail"
+      },
+      {
+        "description": "Azure AI Search with null status",
+        "input": {
+          "Properties": {
+            "PrivateEndpointConnections": [
+              {
+                "Properties": {
+                  "PrivateLinkServiceConnectionState": {
+                    "Status": null
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "expectedResult": "fail"
+      },
+      {
+        "description": "Azure AI Search with empty status",
+        "input": {
+          "Properties": {
+            "PrivateEndpointConnections": [
+              {
+                "Properties": {
+                  "PrivateLinkServiceConnectionState": {
+                    "Status": ""
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "expectedResult": "fail"
+      }
+    ]
+  }
+}
