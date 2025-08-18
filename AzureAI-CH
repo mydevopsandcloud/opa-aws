@@ -1,0 +1,45 @@
+{
+  "Properties": {
+    "PrivateEndpointConnections": [
+      {
+        "Properties": {
+          "PrivateLinkServiceConnectionState": {
+            "Status": "Approved"
+          }
+        }
+      },
+      {
+        "Properties": {
+          "PrivateLinkServiceConnectionState": {
+            "Status": "Pending"
+          }
+        }
+      }
+    ]
+  }
+}
+
+
+≈=====
+
+
+{
+  "Properties": {
+    "PrivateEndpointConnections": [
+      {
+        "Properties": {
+          "PrivateLinkServiceConnectionState": {
+            "Status": "Pending"
+          }
+        }
+      },
+      {
+        "Properties": {
+          "PrivateLinkServiceConnectionState": {
+            "Status": "Rejected"
+          }
+        }
+      }
+    ]
+  }
+}
