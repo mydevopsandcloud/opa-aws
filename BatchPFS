@@ -1,0 +1,50 @@
+{
+  "type": "Microsoft.Batch/batchAccounts/pools",
+  "properties": {
+    "deploymentConfiguration": {
+      "virtualMachineConfiguration": {
+        "diskEncryptionConfiguration": {
+          "targets": [
+            "osDisk",
+            "tempDisk"
+          ]
+        }
+      }
+    }
+  }
+}
+
+
+====
+
+{
+  "type": "Microsoft.Batch/batchAccounts/pools",
+  "properties": {
+    "deploymentConfiguration": {
+      "virtualMachineConfiguration": {
+        "diskEncryptionConfiguration": {
+          "targets": []
+        }
+      }
+    }
+  }
+}
+======
+Skip
+
+{
+  "type": "Microsoft.Compute/virtualMachines",
+  "properties": {
+    "storageProfile": {
+      "osDisk": {
+        "encryptionSettings": {
+          "enabled": true
+        }
+      }
+    }
+  }
+}
+
+
+
+
