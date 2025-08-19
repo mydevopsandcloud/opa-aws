@@ -1,0 +1,17 @@
+{
+  "id": "/subscriptions/11111111-2222-3333-4444-555555555555/resourceGroups/demo-rg/providers/Microsoft.Batch/batchAccounts/testBatch",
+  "type": "Microsoft.Batch/batchAccounts",
+  "name": "testBatch",
+  "properties": {
+    "privateEndpointConnections": [
+      {
+        "id": "/subscriptions/11111111-2222-3333-4444-555555555555/resourceGroups/demo-rg/providers/Microsoft.Batch/batchAccounts/testBatch/privateEndpointConnections/conn1",
+        "properties": {
+          "privateLinkServiceConnectionState": {
+            "status": "Pending"
+          }
+        }
+      }
+    ]
+  }
+}
