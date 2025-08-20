@@ -1,0 +1,162 @@
+{
+  "pass_test_data": {
+    "description": "Test data that should PASS the policy - DiagnosticSettingsResources with EventHub and ConnectedClientList enabled",
+    "input": {
+      "DiagnosticSettingsResources": [
+        {
+          "Properties": {
+            "EventHubName": "my-event-hub",
+            "Logs": [
+              {
+                "Category": "ConnectedClientList",
+                "Enabled": true,
+                "RetentionPolicy": {
+                  "Days": 30,
+                  "Enabled": true
+                }
+              },
+              {
+                "Category": "AuditEvent",
+                "Enabled": true,
+                "RetentionPolicy": {
+                  "Days": 30,
+                  "Enabled": true
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "fail_test_data_1": {
+    "description": "Test data that should FAIL the policy - Missing EventHubName",
+    "input": {
+      "DiagnosticSettingsResources": [
+        {
+          "Properties": {
+            "Logs": [
+              {
+                "Category": "ConnectedClientList",
+                "Enabled": true,
+                "RetentionPolicy": {
+                  "Days": 30,
+                  "Enabled": true
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "fail_test_data_2": {
+    "description": "Test data that should FAIL the policy - ConnectedClientList category disabled",
+    "input": {
+      "DiagnosticSettingsResources": [
+        {
+          "Properties": {
+            "EventHubName": "my-event-hub",
+            "Logs": [
+              {
+                "Category": "ConnectedClientList",
+                "Enabled": false,
+                "RetentionPolicy": {
+                  "Days": 30,
+                  "Enabled": true
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "fail_test_data_3": {
+    "description": "Test data that should FAIL the policy - Missing ConnectedClientList category",
+    "input": {
+      "DiagnosticSettingsResources": [
+        {
+          "Properties": {
+            "EventHubName": "my-event-hub",
+            "Logs": [
+              {
+                "Category": "AuditEvent",
+                "Enabled": true,
+                "RetentionPolicy": {
+                  "Days": 30,
+                  "Enabled": true
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "fail_test_data_4": {
+    "description": "Test data that should FAIL the policy - Empty DiagnosticSettingsResources",
+    "input": {
+      "DiagnosticSettingsResources": []
+    }
+  },
+  "fail_test_data_5": {
+    "description": "Test data that should FAIL the policy - Case sensitivity test (lowercase category)",
+    "input": {
+      "DiagnosticSettingsResources": [
+        {
+          "Properties": {
+            "EventHubName": "my-event-hub",
+            "Logs": [
+              {
+                "Category": "connectedclientlist",
+                "Enabled": true,
+                "RetentionPolicy": {
+                  "Days": 30,
+                  "Enabled": true
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "additional_pass_test": {
+    "description": "Test data that should PASS the policy - Multiple resources with proper configuration",
+    "input": {
+      "DiagnosticSettingsResources": [
+        {
+          "Properties": {
+            "EventHubName": "event-hub-1",
+            "Logs": [
+              {
+                "Category": "ConnectedClientList",
+                "Enabled": true,
+                "RetentionPolicy": {
+                  "Days": 30,
+                  "Enabled": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "Properties": {
+            "EventHubName": "event-hub-2",
+            "Logs": [
+              {
+                "Category": "CONNECTEDCLIENTLIST",
+                "Enabled": true,
+                "RetentionPolicy": {
+                  "Days": 60,
+                  "Enabled": true
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}
