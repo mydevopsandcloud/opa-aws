@@ -1,0 +1,15 @@
+{
+  "DiagnosticSettingsResources": [
+    {
+      "Properties": {
+        "EventHubName": "myeventhub",
+        "Logs": [
+          {
+            "Category": "ConnectedClientList",
+            "Enabled": false
+          }
+        ]
+      }
+    }
+  ]
+}
