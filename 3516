@@ -1,0 +1,11 @@
+{
+  "resourceId": "/subscriptions/11111111-2222-3333-4444-555555555555/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/failstorage",
+  "type": "Microsoft.Storage/storageAccounts",
+  "name": "failstorage",
+  "location": "eastus",
+  "properties": {
+    "dataEncryption": {
+      "type": "SystemManaged"
+    }
+  }
+}
