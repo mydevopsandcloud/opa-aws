@@ -1,0 +1,44 @@
+[
+  {
+    "test_name": "Pass - connection_throttling enabled",
+    "input": {
+      "ServerParameters": [
+        {
+          "name": "connection_throttling",
+          "properties": {
+            "value": "on"
+          }
+        }
+      ]
+    },
+    "expected": "pass"
+  },
+  {
+    "test_name": "Fail - connection_throttling disabled",
+    "input": {
+      "ServerParameters": [
+        {
+          "name": "connection_throttling",
+          "properties": {
+            "value": "off"
+          }
+        }
+      ]
+    },
+    "expected": "fail"
+  },
+  {
+    "test_name": "Pass - parameter missing",
+    "input": {
+      "ServerParameters": [
+        {
+          "name": "max_connections",
+          "properties": {
+            "value": "200"
+          }
+        }
+      ]
+    },
+    "expected": "pass"
+  }
+]
